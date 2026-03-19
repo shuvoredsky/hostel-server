@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const node_1 = require("better-auth/node");
+const auth_1 = require("../app/lib/auth");
+const auth_route_1 = require("../app/module/auth/auth.route");
+const router = (0, express_1.Router)();
+router.all('/auth/better/*', (0, node_1.toNodeHandler)(auth_1.auth));
+router.use('/auth', auth_route_1.AuthRoutes);
+exports.default = router;
