@@ -19,4 +19,9 @@ export const envVars = {
 
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+
+  // Cloudinary
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string,
 };
