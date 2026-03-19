@@ -35,6 +35,9 @@ model User {
 
   sessions Session[]
   accounts Account[]
+  listings Listing[]
+  bookings Booking[]
+  reviews  Review[]
 }
 
 model Session {
@@ -76,4 +79,74 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+enum ListingType {
+  ROOM
+  SEAT
+  BASHA
+}
+
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Listing {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  type        ListingType
+  status      ListingStatus @default(PENDING)
+  price       Float
+  address     String
+  area        String
+  city        String        @default("Dhaka")
+  totalRooms  Int?
+  totalSeats  Int?
+  isAvailable Boolean       @default(true)
+  isDeleted   Boolean       @default(false)
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  images   ListingImage[]
+  bookings Booking[]
+  reviews  Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ListingImage {
+  id        String   @id @default(cuid())
+  url       String
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  listingId String
+  studentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id])
+  student User    @relation(fields: [studentId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  listingId String
+  studentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id])
+  student User    @relation(fields: [studentId], references: [id])
 }
