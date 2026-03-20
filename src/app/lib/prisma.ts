@@ -7,3 +7,11 @@ const adapter = new PrismaPg({
 });
 
 export const prisma = new PrismaClient({ adapter });
+
+// Connection test
+prisma.$connect()
+  .then(() => console.log('✅ Database connected'))
+  .catch((err) => {
+    console.error('❌ Database connection failed:', err);
+    process.exit(1);
+  });

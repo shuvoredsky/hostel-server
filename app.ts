@@ -12,6 +12,10 @@ app.use(cors({ origin: envVars.FRONTEND_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
+app.post('/test-booking', (req, res) => {
+  res.json({ message: 'test works' });
+});
+
 app.use('/api/v1', router);
 
 app.use(globalErrorHandler);

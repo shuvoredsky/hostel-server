@@ -1,8 +1,20 @@
 import app from './app';
 import { envVars } from './src/config/env';
 
-const PORT = envVars.PORT || 5000;
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+});
 
-app.listen(PORT, () => {
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+});
+
+const PORT = envVars.PORT || 8000;
+
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
 });

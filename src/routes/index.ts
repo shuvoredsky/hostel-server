@@ -5,12 +5,20 @@ import { AuthRoutes } from '../app/module/auth/auth.route';
 import { ListingRoutes } from '../app/module/listing/listing.route';
 import { BookingRoutes } from '../app/module/booking/booking.route';
 
+
+
 const router = Router();
 
+
+router.post('/bookings-test', (req, res) => {
+  res.json({ message: 'booking test works' });
+});
+router.use('/bookings', BookingRoutes);
 
 router.all('/auth/better/{*path}', toNodeHandler(auth));
 router.use('/auth', AuthRoutes);
 router.use('/listings', ListingRoutes);
 router.use('/bookings', BookingRoutes);
+console.log('Booking routes registered');
 
 export default router;

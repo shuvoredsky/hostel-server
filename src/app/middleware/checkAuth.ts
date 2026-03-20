@@ -13,6 +13,11 @@ export const checkAuth =
     try {
       const sessionToken = CookieUtils.getCookie(req, 'better-auth.session_token');
 
+      
+      console.log('Session token:', sessionToken);
+console.log('Access token:', CookieUtils.getCookie(req, 'accessToken'));
+console.log('All cookies:', req.cookies);
+
       if (!sessionToken) {
         throw new AppError(status.UNAUTHORIZED, 'Unauthorized! No session token provided');
       }

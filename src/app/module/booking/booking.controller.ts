@@ -7,6 +7,7 @@ import { BookingService } from './booking.service';
 // ─── Create Booking ───────────────────────────────────────────────────────────
 const createBooking = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  console.log('User from request:', user); 
   const result = await BookingService.createBooking(req.body, user);
 
   sendResponse(res, {
