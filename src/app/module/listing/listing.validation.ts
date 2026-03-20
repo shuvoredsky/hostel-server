@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ListingType } from '../../../generated/prisma';
+import { ListingType } from '../../../generated';
 
 const createListingZodSchema = z.object({
   title: z.string({ message: 'Title is required' }),

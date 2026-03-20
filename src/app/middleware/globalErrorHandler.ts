@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import AppError from '../errorHelpers/AppError';
 
 const globalErrorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
+  console.error('🔴 Error:', err);
   let statusCode = 500;
   let message = 'Something went wrong!';
   let errorSources = [{ path: '', message }];

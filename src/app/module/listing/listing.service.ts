@@ -1,5 +1,5 @@
 import status from 'http-status';
-import { ListingStatus } from '../../../generated/prisma';
+import { ListingStatus } from '../../../generated';
 import AppError from '../../errorHelpers/AppError';
 import { prisma } from '../../lib/prisma';
 import { IRequestUser } from '../../interface/requestUser.interface';

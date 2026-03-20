@@ -25,3 +25,21 @@ export const UserStatus = {
 } as const
 
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
+
+
+export const ListingType = {
+  ROOM: 'ROOM',
+  SEAT: 'SEAT',
+  BASHA: 'BASHA'
+} as const
+
+export type ListingType = (typeof ListingType)[keyof typeof ListingType]
+
+
+export const ListingStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type ListingStatus = (typeof ListingStatus)[keyof typeof ListingStatus]

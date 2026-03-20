@@ -50,7 +50,7 @@ const getAllListings = catchAsync(async (req: Request, res: Response) => {
 
 // ─── Get Single Listing ───────────────────────────────────────────────────────
 const getSingleListing = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await ListingService.getSingleListing(id);
 
   sendResponse(res, {
@@ -76,7 +76,7 @@ const getMyListings = catchAsync(async (req: Request, res: Response) => {
 
 // ─── Update Listing ───────────────────────────────────────────────────────────
 const updateListing = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const user = (req as any).user;
   const result = await ListingService.updateListing(id, req.body, user);
 
@@ -90,7 +90,7 @@ const updateListing = catchAsync(async (req: Request, res: Response) => {
 
 // ─── Delete Listing ───────────────────────────────────────────────────────────
 const deleteListing = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const user = (req as any).user;
   const result = await ListingService.deleteListing(id, user);
 
@@ -104,7 +104,7 @@ const deleteListing = catchAsync(async (req: Request, res: Response) => {
 
 // ─── Approve Listing (Admin) ──────────────────────────────────────────────────
 const approveListing = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await ListingService.approveListing(id);
 
   sendResponse(res, {
@@ -117,7 +117,7 @@ const approveListing = catchAsync(async (req: Request, res: Response) => {
 
 // ─── Reject Listing (Admin) ───────────────────────────────────────────────────
 const rejectListing = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await ListingService.rejectListing(id);
 
   sendResponse(res, {
