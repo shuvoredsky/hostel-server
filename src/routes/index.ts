@@ -4,7 +4,7 @@ import { auth } from '../app/lib/auth';
 import { AuthRoutes } from '../app/module/auth/auth.route';
 import { ListingRoutes } from '../app/module/listing/listing.route';
 import { BookingRoutes } from '../app/module/booking/booking.route';
-
+import { PaymentRoutes } from '../app/module/payment/payment.route';
 
 
 const router = Router();
@@ -20,5 +20,6 @@ router.use('/auth', AuthRoutes);
 router.use('/listings', ListingRoutes);
 router.use('/bookings', BookingRoutes);
 console.log('Booking routes registered');
+router.use('/payments', PaymentRoutes);
 
 export default router;

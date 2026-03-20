@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-    "dev": "nodemon --exec ts-node server.ts",
+    "dev": "npx kill-port 8000 && nodemon --exec ts-node server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "db:migrate": "prisma migrate dev",
@@ -30,6 +30,7 @@
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
     "pg": "^8.20.0",
+    "sslcommerz-lts": "^1.2.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

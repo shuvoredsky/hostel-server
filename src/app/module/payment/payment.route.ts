@@ -1,0 +1,35 @@
+import { Router } from 'express';
+import { Role } from '../../../generated';
+import { checkAuth } from '../../middleware/checkAuth';
+import { PaymentController } from './payment.controller';
+
+const router = Router();
+
+// Student — payment initiate করবে
+router.post(
+  '/initiate/:bookingId',
+  checkAuth(Role.STUDENT),
+  PaymentController.initiatePayment,
+);
+
+// Student — নিজের payments দেখবে
+router.get(
+  '/my-payments',
+  checkAuth(Role.STUDENT),
+  PaymentController.getMyPayments,
+);
+
+// Admin — সব payments দেখবে + commission
+router.get(
+  '/admin/all',
+  checkAuth(Role.ADMIN),
+  PaymentController.getAllPayments,
+);
+
+// SSLCommerz callbacks — public (SSLCommerz থেকে আসবে)
+router.post('/success/:transactionId', PaymentController.paymentSuccess);
+router.post('/fail/:transactionId', PaymentController.paymentFail);
+router.post('/cancel/:transactionId', PaymentController.paymentCancel);
+router.post('/ipn', (req, res) => res.status(200).send('IPN received'));
+
+export const PaymentRoutes = router;
