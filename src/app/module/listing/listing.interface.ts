@@ -1,4 +1,4 @@
-import { ListingType } from '../../../generated/prisma';
+import { ListingType } from '../../../generated/enums';
 
 export interface ICreateListingPayload {
   title: string;

@@ -6,7 +6,7 @@ import { ListingController } from './listing.controller';
 const router = Router();
 
 
-router.get('/', ListingController.getAllListings);
+router.get('/', ListingController.getAllListings);  
 router.get('/:id', ListingController.getSingleListing);
 
 // Owner
