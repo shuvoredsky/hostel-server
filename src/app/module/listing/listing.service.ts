@@ -35,7 +35,7 @@ const createListing = async (
 };
 
 // ─── Get All Approved Listings (Public) ───────────────────────────────────────
-const getAllListings = async (filters: IListingFilterPayload) => {
+const getAllListings = async (filters: IListingFilterPayload & { studentId?: string }) => {
   const {
     type,
     area,
@@ -48,6 +48,7 @@ const getAllListings = async (filters: IListingFilterPayload) => {
     sortOrder,
     page,
     limit,
+    studentId,
   } = filters;
 
   const pageNumber = page || 1;
@@ -57,17 +58,16 @@ const getAllListings = async (filters: IListingFilterPayload) => {
   const where: any = {
     status: 'APPROVED',
     isDeleted: false,
-     owner: {
-    status: 'ACTIVE',
-    isDeleted: false,
-  },
+    owner: {
+      status: 'ACTIVE',
+      isDeleted: false,
+    },
     ...(type && { type }),
     ...(area && { area: { contains: area, mode: 'insensitive' } }),
     ...(city && { city: { contains: city, mode: 'insensitive' } }),
     ...(minPrice && { price: { gte: minPrice } }),
     ...(maxPrice && { price: { lte: maxPrice } }),
     ...(isAvailable !== undefined && { isAvailable }),
-    // Search by title or description or address
     ...(search && {
       OR: [
         { title: { contains: search, mode: 'insensitive' } },
@@ -101,21 +101,37 @@ const getAllListings = async (filters: IListingFilterPayload) => {
     prisma.listing.count({ where }),
   ]);
 
-  // Average rating calculate করো
-  const listingsWithRating = listings.map((listing) => {
-    const ratings = listing.reviews.map((r) => r.rating);
-    const avgRating =
-      ratings.length > 0
-        ? parseFloat((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
-        : 0;
+  // Average rating + wishlist status calculate করো
+  const listingsWithRating = await Promise.all(
+    listings.map(async (listing) => {
+      const ratings = listing.reviews.map((r) => r.rating);
+      const avgRating =
+        ratings.length > 0
+          ? parseFloat((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
+          : 0;
 
-    return {
-      ...listing,
-      avgRating,
-      totalReviews: ratings.length,
-      reviews: undefined,
-    };
-  });
+      let isWishlisted = false;
+      if (studentId) {
+        const wishlist = await prisma.wishlist.findUnique({
+          where: {
+            studentId_listingId: {
+              studentId,
+              listingId: listing.id,
+            },
+          },
+        });
+        isWishlisted = !!wishlist;
+      }
+
+      return {
+        ...listing,
+        avgRating,
+        totalReviews: ratings.length,
+        isWishlisted,
+        reviews: undefined,
+      };
+    }),
+  );
 
   return {
     listings: listingsWithRating,

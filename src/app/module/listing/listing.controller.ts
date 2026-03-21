@@ -29,6 +29,8 @@ const createListing = catchAsync(async (req: Request, res: Response) => {
 
 // ─── Get All Listings (Public) ────────────────────────────────────────────────
 const getAllListings = catchAsync(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+
   const filters = {
     type: req.query.type as any,
     area: req.query.area as string,
@@ -41,6 +43,7 @@ const getAllListings = catchAsync(async (req: Request, res: Response) => {
     sortOrder: req.query.sortOrder as any,
     page: req.query.page ? Number(req.query.page) : undefined,
     limit: req.query.limit ? Number(req.query.limit) : undefined,
+    studentId: user?.userId,
   };
 
   const result = await ListingService.getAllListings(filters);

@@ -8,6 +8,7 @@ import { PaymentRoutes } from '../app/module/payment/payment.route';
 import { DashboardRoutes } from '../app/module/dashboard/dashboard.route';
 import { ReviewRoutes } from '../app/module/review/review.route';
 import { UserRoutes } from '../app/module/user/user.route';
+import { WishlistRoutes } from '../app/module/wishlist/wishlist.route';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/payments', PaymentRoutes);
 router.use('/dashboard', DashboardRoutes);
 router.use('/reviews', ReviewRoutes);
 router.use('/users', UserRoutes);
+router.use('/wishlist', WishlistRoutes);
 
 export default router;
