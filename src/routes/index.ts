@@ -9,6 +9,7 @@ import { DashboardRoutes } from '../app/module/dashboard/dashboard.route';
 import { ReviewRoutes } from '../app/module/review/review.route';
 import { UserRoutes } from '../app/module/user/user.route';
 import { WishlistRoutes } from '../app/module/wishlist/wishlist.route';
+import { SettingsRoutes } from '../app/module/settings/settings.route';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use('/dashboard', DashboardRoutes);
 router.use('/reviews', ReviewRoutes);
 router.use('/users', UserRoutes);
 router.use('/wishlist', WishlistRoutes);
+router.use('/settings', SettingsRoutes);
 
 export default router;

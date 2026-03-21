@@ -94,3 +94,13 @@ export type ExtraCharge = Prisma.ExtraChargeModel
  * 
  */
 export type Wishlist = Prisma.WishlistModel
+/**
+ * Model SiteSettings
+ * 
+ */
+export type SiteSettings = Prisma.SiteSettingsModel
+/**
+ * Model SiteBanner
+ * 
+ */
+export type SiteBanner = Prisma.SiteBannerModel

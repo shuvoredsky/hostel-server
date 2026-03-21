@@ -61,7 +61,9 @@ export const ModelName = {
   Review: 'Review',
   Payment: 'Payment',
   ExtraCharge: 'ExtraCharge',
-  Wishlist: 'Wishlist'
+  Wishlist: 'Wishlist',
+  SiteSettings: 'SiteSettings',
+  SiteBanner: 'SiteBanner'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -245,6 +247,29 @@ export const WishlistScalarFieldEnum = {
 } as const
 
 export type WishlistScalarFieldEnum = (typeof WishlistScalarFieldEnum)[keyof typeof WishlistScalarFieldEnum]
+
+
+export const SiteSettingsScalarFieldEnum = {
+  id: 'id',
+  logoUrl: 'logoUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteSettingsScalarFieldEnum = (typeof SiteSettingsScalarFieldEnum)[keyof typeof SiteSettingsScalarFieldEnum]
+
+
+export const SiteBannerScalarFieldEnum = {
+  id: 'id',
+  imageUrl: 'imageUrl',
+  title: 'title',
+  isActive: 'isActive',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteBannerScalarFieldEnum = (typeof SiteBannerScalarFieldEnum)[keyof typeof SiteBannerScalarFieldEnum]
 
 
 export const SortOrder = {
