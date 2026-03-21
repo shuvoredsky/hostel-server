@@ -228,6 +228,218 @@ const getAdminDashboard = async (range: DateRange = 'all') => {
   };
 };
 
+
+
+
+
+const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
+  const dateFilter = getDateRange(range);
+  const createdAtFilter = Object.keys(dateFilter).length ? { createdAt: dateFilter } : {};
+  const paidAtFilter = Object.keys(dateFilter).length ? { paidAt: dateFilter } : {};
+
+  // ─── Overview Stats ───────────────────────────────────────────────────────
+  const [
+    totalListings,
+    approvedListings,
+    pendingListings,
+    rejectedListings,
+    totalBookings,
+  ] = await Promise.all([
+    prisma.listing.count({ where: { ownerId, isDeleted: false } }),
+    prisma.listing.count({ where: { ownerId, isDeleted: false, status: 'APPROVED' } }),
+    prisma.listing.count({ where: { ownerId, isDeleted: false, status: 'PENDING' } }),
+    prisma.listing.count({ where: { ownerId, isDeleted: false, status: 'REJECTED' } }),
+    prisma.booking.count({ where: { ownerId, ...createdAtFilter } }),
+  ]);
+
+  // ─── Booking Stats ────────────────────────────────────────────────────────
+  const [
+    pendingBookings,
+    acceptedBookings,
+    confirmedBookings,
+    rejectedBookings,
+    cancelledBookings,
+  ] = await Promise.all([
+    prisma.booking.count({ where: { ownerId, status: 'PENDING', ...createdAtFilter } }),
+    prisma.booking.count({ where: { ownerId, status: 'ACCEPTED', ...createdAtFilter } }),
+    prisma.booking.count({ where: { ownerId, status: 'CONFIRMED', ...createdAtFilter } }),
+    prisma.booking.count({ where: { ownerId, status: 'REJECTED', ...createdAtFilter } }),
+    prisma.booking.count({ where: { ownerId, status: 'CANCELLED', ...createdAtFilter } }),
+  ]);
+
+  // ─── Listings With Booking Count ──────────────────────────────────────────
+  const listingsWithBookings = await prisma.listing.findMany({
+    where: { ownerId, isDeleted: false },
+    include: {
+      images: { take: 1 },
+      bookings: {
+        where: { ...createdAtFilter },
+        include: {
+          student: { select: { id: true, name: true, email: true } },
+          payment: {
+            select: {
+              status: true,
+              amount: true,
+              commission: true,
+              paidAt: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // প্রতিটা listing এর জন্য stats
+  const listingStats = listingsWithBookings.map((listing) => {
+    const bookings = listing.bookings;
+    const paidBookings = bookings.filter((b) => b.payment?.status === 'PAID');
+    const unpaidBookings = bookings.filter(
+      (b) => b.status === 'ACCEPTED' && b.payment?.status === 'UNPAID',
+    );
+
+    return {
+      listingId: listing.id,
+      title: listing.title,
+      type: listing.type,
+      area: listing.area,
+      city: listing.city,
+      price: listing.price,
+      status: listing.status,
+      isAvailable: listing.isAvailable,
+      image: listing.images[0]?.url || null,
+      stats: {
+        totalApplicants: bookings.length,
+        pending: bookings.filter((b) => b.status === 'PENDING').length,
+        accepted: bookings.filter((b) => b.status === 'ACCEPTED').length,
+        confirmed: bookings.filter((b) => b.status === 'CONFIRMED').length,
+        rejected: bookings.filter((b) => b.status === 'REJECTED').length,
+        cancelled: bookings.filter((b) => b.status === 'CANCELLED').length,
+        paidCount: paidBookings.length,
+        unpaidCount: unpaidBookings.length,
+        totalRevenue: paidBookings.reduce((sum, b) => sum + (b.payment?.amount || 0), 0),
+      },
+      // কে কে apply করেছে
+      applicants: bookings.map((b) => ({
+        bookingId: b.id,
+        studentName: b.student.name,
+        studentEmail: b.student.email,
+        bookingStatus: b.status,
+        moveInDate: b.moveInDate,
+        paymentStatus: b.payment?.status || 'N/A',
+        amount: b.payment?.amount || 0,
+        paidAt: b.payment?.paidAt || null,
+        bookedAt: b.createdAt,
+      })),
+    };
+  });
+
+  // ─── Payment Stats ────────────────────────────────────────────────────────
+  const allPayments = await prisma.payment.findMany({
+    where: {
+      booking: { ownerId },
+      ...paidAtFilter,
+    },
+    include: {
+      student: { select: { id: true, name: true, email: true } },
+      booking: {
+        include: {
+          listing: { select: { id: true, title: true, area: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const paidPayments = allPayments.filter((p) => p.status === 'PAID');
+  const unpaidPayments = allPayments.filter((p) => p.status === 'UNPAID');
+  const failedPayments = allPayments.filter((p) => p.status === 'FAILED');
+
+  const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+
+  // ─── Unpaid/Pending Payments (payment baki) ───────────────────────────────
+  const pendingPaymentsList = unpaidPayments.map((p) => ({
+    paymentId: p.id,
+    studentName: p.student.name,
+    studentEmail: p.student.email,
+    listingTitle: p.booking.listing.title,
+    area: p.booking.listing.area,
+    amount: p.amount,
+    bookingDate: p.booking.createdAt,
+    daysWaiting: Math.floor(
+      (new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+    ),
+  }));
+
+  // ─── Monthly Payment Breakdown ────────────────────────────────────────────
+  const monthlyPayments: Record<string, { paid: number; revenue: number; count: number }> = {};
+
+  paidPayments.forEach((p) => {
+    if (!p.paidAt) return;
+    const monthKey = new Date(p.paidAt).toLocaleString('default', {
+      month: 'long',
+      year: 'numeric',
+    });
+    if (!monthlyPayments[monthKey]) {
+      monthlyPayments[monthKey] = { paid: 0, revenue: 0, count: 0 };
+    }
+    monthlyPayments[monthKey].paid += 1;
+    monthlyPayments[monthKey].revenue += p.amount;
+    monthlyPayments[monthKey].count += 1;
+  });
+
+  const monthlyBreakdown = Object.entries(monthlyPayments).map(([month, data]) => ({
+    month,
+    ...data,
+  }));
+
+  // ─── Recent Bookings ──────────────────────────────────────────────────────
+  const recentBookings = await prisma.booking.findMany({
+    take: 10,
+    where: { ownerId, ...createdAtFilter },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      listing: { select: { title: true, area: true, price: true } },
+      student: { select: { name: true, email: true } },
+      payment: { select: { status: true, amount: true, paidAt: true } },
+    },
+  });
+
+  return {
+    range,
+    overview: {
+      totalListings,
+      approvedListings,
+      pendingListings,
+      rejectedListings,
+      totalBookings,
+      totalRevenue,
+      totalPaidCount: paidPayments.length,
+      totalUnpaidCount: unpaidPayments.length,
+    },
+    bookings: {
+      pending: pendingBookings,
+      accepted: acceptedBookings,
+      confirmed: confirmedBookings,
+      rejected: rejectedBookings,
+      cancelled: cancelledBookings,
+    },
+    listingStats,
+    payments: {
+      totalRevenue,
+      paidCount: paidPayments.length,
+      unpaidCount: unpaidPayments.length,
+      failedCount: failedPayments.length,
+      pendingPayments: pendingPaymentsList,
+      monthlyBreakdown,
+    },
+    recentBookings,
+  };
+};
+
 export const DashboardService = {
   getAdminDashboard,
+  getOwnerDashboard,
 };
+

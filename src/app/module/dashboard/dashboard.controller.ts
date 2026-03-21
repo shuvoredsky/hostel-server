@@ -20,6 +20,28 @@ const getAdminDashboard = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+const getOwnerDashboard = catchAsync(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const range = (req.query.range as string) || 'all';
+
+  const validRanges = ['daily', 'weekly', 'monthly', 'yearly', 'all'];
+  const selectedRange = validRanges.includes(range) ? range : 'all';
+
+  const result = await DashboardService.getOwnerDashboard(user.userId, selectedRange as any);
+
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: 'Owner dashboard fetched successfully',
+    data: result,
+  });
+});
+
 export const DashboardController = {
   getAdminDashboard,
+  getOwnerDashboard,
 };
+
+

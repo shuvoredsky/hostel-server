@@ -6,5 +6,7 @@ import { DashboardController } from './dashboard.controller';
 const router = Router();
 
 router.get('/admin', checkAuth(Role.ADMIN), DashboardController.getAdminDashboard);
+router.get('/owner', checkAuth(Role.OWNER), DashboardController.getOwnerDashboard);
+
 
 export const DashboardRoutes = router;
