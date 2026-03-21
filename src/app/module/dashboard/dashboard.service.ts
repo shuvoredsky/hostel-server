@@ -438,8 +438,236 @@ const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
   };
 };
 
+
+
+
+const getStudentDashboard = async (studentId: string, range: DateRange = 'all') => {
+  const dateFilter = getDateRange(range);
+  const createdAtFilter = Object.keys(dateFilter).length ? { createdAt: dateFilter } : {};
+  const paidAtFilter = Object.keys(dateFilter).length ? { paidAt: dateFilter } : {};
+
+  // ─── Overview Stats ───────────────────────────────────────────────────────
+  const [
+    totalBookings,
+    pendingBookings,
+    acceptedBookings,
+    confirmedBookings,
+    rejectedBookings,
+    cancelledBookings,
+  ] = await Promise.all([
+    prisma.booking.count({ where: { studentId, ...createdAtFilter } }),
+    prisma.booking.count({ where: { studentId, status: 'PENDING', ...createdAtFilter } }),
+    prisma.booking.count({ where: { studentId, status: 'ACCEPTED', ...createdAtFilter } }),
+    prisma.booking.count({ where: { studentId, status: 'CONFIRMED', ...createdAtFilter } }),
+    prisma.booking.count({ where: { studentId, status: 'REJECTED', ...createdAtFilter } }),
+    prisma.booking.count({ where: { studentId, status: 'CANCELLED', ...createdAtFilter } }),
+  ]);
+
+  // ─── Payment Stats ────────────────────────────────────────────────────────
+  const allPayments = await prisma.payment.findMany({
+    where: { studentId, ...createdAtFilter },
+    include: {
+      booking: {
+        include: {
+          listing: {
+            select: { id: true, title: true, area: true, city: true, price: true },
+          },
+          extraCharges: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const paidPayments = allPayments.filter((p) => p.status === 'PAID');
+  const unpaidPayments = allPayments.filter((p) => p.status === 'UNPAID');
+
+  const totalPaid = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+  const totalUnpaid = unpaidPayments.reduce((sum, p) => sum + p.amount, 0);
+
+  // ─── Monthly Payment Breakdown ────────────────────────────────────────────
+  const monthlyPayments: Record<string, {
+    paid: number;
+    unpaid: number;
+    paidCount: number;
+    unpaidCount: number;
+  }> = {};
+
+  allPayments.forEach((p) => {
+    const date = p.paidAt || p.createdAt;
+    const monthKey = new Date(date).toLocaleString('default', {
+      month: 'long',
+      year: 'numeric',
+    });
+
+    if (!monthlyPayments[monthKey]) {
+      monthlyPayments[monthKey] = { paid: 0, unpaid: 0, paidCount: 0, unpaidCount: 0 };
+    }
+
+    if (p.status === 'PAID') {
+      monthlyPayments[monthKey].paid += p.amount;
+      monthlyPayments[monthKey].paidCount += 1;
+    } else if (p.status === 'UNPAID') {
+      monthlyPayments[monthKey].unpaid += p.amount;
+      monthlyPayments[monthKey].unpaidCount += 1;
+    }
+  });
+
+  const monthlyBreakdown = Object.entries(monthlyPayments).map(([month, data]) => ({
+    month,
+    ...data,
+  }));
+
+  // ─── Paid Payment Details ─────────────────────────────────────────────────
+  const paidPaymentDetails = paidPayments.map((p) => {
+    const extraTotal = p.booking.extraCharges.reduce((sum, e) => sum + e.amount, 0);
+    return {
+      paymentId: p.id,
+      transactionId: p.transactionId,
+      listingTitle: p.booking.listing.title,
+      area: p.booking.listing.area,
+      city: p.booking.listing.city,
+      baseAmount: p.amount,
+      extraCharges: p.booking.extraCharges.map((e) => ({
+        title: e.title,
+        amount: e.amount,
+        description: e.description,
+      })),
+      extraTotal,
+      totalAmount: p.amount + extraTotal,
+      paidAt: p.paidAt,
+    };
+  });
+
+  // ─── Unpaid Payment Details ───────────────────────────────────────────────
+  const unpaidPaymentDetails = unpaidPayments.map((p) => {
+    const extraTotal = p.booking.extraCharges.reduce((sum, e) => sum + e.amount, 0);
+    const daysWaiting = Math.floor(
+      (new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return {
+      paymentId: p.id,
+      bookingId: p.bookingId,
+      listingTitle: p.booking.listing.title,
+      area: p.booking.listing.area,
+      city: p.booking.listing.city,
+      baseAmount: p.amount,
+      extraCharges: p.booking.extraCharges.map((e) => ({
+        title: e.title,
+        amount: e.amount,
+        description: e.description,
+      })),
+      extraTotal,
+      totalDue: p.amount + extraTotal,
+      daysWaiting,
+      acceptedAt: p.createdAt,
+    };
+  });
+
+  // ─── Active Bookings (Confirmed) ──────────────────────────────────────────
+  const activeBookings = await prisma.booking.findMany({
+    where: { studentId, status: 'CONFIRMED' },
+    include: {
+      listing: {
+        include: { images: { take: 1 } },
+      },
+      payment: {
+        select: { status: true, amount: true, paidAt: true },
+      },
+      extraCharges: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const activeBookingDetails = activeBookings.map((b) => {
+    const extraTotal = b.extraCharges.reduce((sum, e) => sum + e.amount, 0);
+    return {
+      bookingId: b.id,
+      listingTitle: b.listing.title,
+      listingType: b.listing.type,
+      area: b.listing.area,
+      city: b.listing.city,
+      address: b.listing.address,
+      image: b.listing.images[0]?.url || null,
+      monthlyRent: b.listing.price,
+      moveInDate: b.moveInDate,
+      paymentStatus: b.payment?.status || 'N/A',
+      extraCharges: b.extraCharges.map((e) => ({
+        title: e.title,
+        amount: e.amount,
+        description: e.description,
+      })),
+      extraTotal,
+      totalMonthlyDue: b.listing.price + extraTotal,
+      confirmedAt: b.createdAt,
+    };
+  });
+
+  // ─── All Bookings History ─────────────────────────────────────────────────
+  const bookingHistory = await prisma.booking.findMany({
+    where: { studentId, ...createdAtFilter },
+    include: {
+      listing: {
+        select: {
+          title: true,
+          type: true,
+          area: true,
+          price: true,
+          images: { take: 1 },
+        },
+      },
+      payment: {
+        select: { status: true, amount: true, paidAt: true },
+      },
+      extraCharges: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return {
+    range,
+    overview: {
+      totalBookings,
+      pendingBookings,
+      acceptedBookings,
+      confirmedBookings,
+      rejectedBookings,
+      cancelledBookings,
+      totalPaid,
+      totalUnpaid,
+      totalPaidCount: paidPayments.length,
+      totalUnpaidCount: unpaidPayments.length,
+    },
+    activeBookings: activeBookingDetails,
+    payments: {
+      totalPaid,
+      totalUnpaid,
+      monthlyBreakdown,
+      paidDetails: paidPaymentDetails,
+      unpaidDetails: unpaidPaymentDetails,
+    },
+    bookingHistory: bookingHistory.map((b) => ({
+      bookingId: b.id,
+      listingTitle: b.listing.title,
+      listingType: b.listing.type,
+      area: b.listing.area,
+      monthlyRent: b.listing.price,
+      image: b.listing.images[0]?.url || null,
+      status: b.status,
+      paymentStatus: b.payment?.status || 'N/A',
+      paidAt: b.payment?.paidAt || null,
+      extraCharges: b.extraCharges,
+      moveInDate: b.moveInDate,
+      bookedAt: b.createdAt,
+    })),
+  };
+};
+
 export const DashboardService = {
   getAdminDashboard,
   getOwnerDashboard,
+  getStudentDashboard,
 };
+
+
 
