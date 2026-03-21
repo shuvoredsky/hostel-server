@@ -84,3 +84,8 @@ export type Review = Prisma.ReviewModel
  * 
  */
 export type Payment = Prisma.PaymentModel
+/**
+ * Model ExtraCharge
+ * 
+ */
+export type ExtraCharge = Prisma.ExtraChargeModel

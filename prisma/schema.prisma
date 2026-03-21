@@ -153,12 +153,13 @@ model Booking {
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
-  listing Listing  @relation(fields: [listingId], references: [id])
-  student User     @relation("StudentBookings", fields: [studentId], references: [id])
-  owner   User     @relation("OwnerBookings", fields: [ownerId], references: [id])
-  payment Payment?
-  user    User?    @relation(fields: [userId], references: [id])
-  userId  String?
+  listing      Listing       @relation(fields: [listingId], references: [id])
+  student      User          @relation("StudentBookings", fields: [studentId], references: [id])
+  owner        User          @relation("OwnerBookings", fields: [ownerId], references: [id])
+  payment      Payment?
+  user         User?         @relation(fields: [userId], references: [id])
+  userId       String?
+  extraCharges ExtraCharge[]
 }
 
 model Review {
@@ -197,4 +198,16 @@ model Payment {
 
   booking Booking @relation(fields: [bookingId], references: [id])
   student User    @relation("StudentPayments", fields: [studentId], references: [id])
+}
+
+model ExtraCharge {
+  id          String   @id @default(cuid())
+  bookingId   String
+  title       String
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 }

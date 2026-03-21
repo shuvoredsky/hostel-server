@@ -392,7 +392,8 @@ export const ModelName = {
   ListingImage: 'ListingImage',
   Booking: 'Booking',
   Review: 'Review',
-  Payment: 'Payment'
+  Payment: 'Payment',
+  ExtraCharge: 'ExtraCharge'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "listing" | "listingImage" | "booking" | "review" | "payment"
+    modelProps: "user" | "session" | "account" | "verification" | "listing" | "listingImage" | "booking" | "review" | "payment" | "extraCharge"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1078,6 +1079,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ExtraCharge: {
+      payload: Prisma.$ExtraChargePayload<ExtArgs>
+      fields: Prisma.ExtraChargeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ExtraChargeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ExtraChargeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>
+        }
+        findFirst: {
+          args: Prisma.ExtraChargeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ExtraChargeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>
+        }
+        findMany: {
+          args: Prisma.ExtraChargeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>[]
+        }
+        create: {
+          args: Prisma.ExtraChargeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>
+        }
+        createMany: {
+          args: Prisma.ExtraChargeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ExtraChargeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>[]
+        }
+        delete: {
+          args: Prisma.ExtraChargeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>
+        }
+        update: {
+          args: Prisma.ExtraChargeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>
+        }
+        deleteMany: {
+          args: Prisma.ExtraChargeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ExtraChargeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ExtraChargeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>[]
+        }
+        upsert: {
+          args: Prisma.ExtraChargeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExtraChargePayload>
+        }
+        aggregate: {
+          args: Prisma.ExtraChargeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateExtraCharge>
+        }
+        groupBy: {
+          args: Prisma.ExtraChargeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ExtraChargeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ExtraChargeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ExtraChargeCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1258,6 +1333,19 @@ export const PaymentScalarFieldEnum = {
 } as const
 
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
+
+
+export const ExtraChargeScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  title: 'title',
+  amount: 'amount',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ExtraChargeScalarFieldEnum = (typeof ExtraChargeScalarFieldEnum)[keyof typeof ExtraChargeScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1491,7 +1579,7 @@ export type PrismaClientOptions = ({
   /**
    * The default values for transactionOptions
    * maxWait ?= 2000
-   * timeout ?= 8000
+   * timeout ?= 5000
    */
   transactionOptions?: {
     maxWait?: number
@@ -1540,6 +1628,7 @@ export type GlobalOmitConfig = {
   booking?: Prisma.BookingOmit
   review?: Prisma.ReviewOmit
   payment?: Prisma.PaymentOmit
+  extraCharge?: Prisma.ExtraChargeOmit
 }
 
 /* Types for Logging */
