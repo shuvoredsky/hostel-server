@@ -316,6 +316,7 @@ export type ListingWhereInput = {
   images?: Prisma.ListingImageListRelationFilter
   bookings?: Prisma.BookingListRelationFilter
   reviews?: Prisma.ReviewListRelationFilter
+  wishlists?: Prisma.WishlistListRelationFilter
 }
 
 export type ListingOrderByWithRelationInput = {
@@ -339,6 +340,7 @@ export type ListingOrderByWithRelationInput = {
   images?: Prisma.ListingImageOrderByRelationAggregateInput
   bookings?: Prisma.BookingOrderByRelationAggregateInput
   reviews?: Prisma.ReviewOrderByRelationAggregateInput
+  wishlists?: Prisma.WishlistOrderByRelationAggregateInput
 }
 
 export type ListingWhereUniqueInput = Prisma.AtLeast<{
@@ -365,6 +367,7 @@ export type ListingWhereUniqueInput = Prisma.AtLeast<{
   images?: Prisma.ListingImageListRelationFilter
   bookings?: Prisma.BookingListRelationFilter
   reviews?: Prisma.ReviewListRelationFilter
+  wishlists?: Prisma.WishlistListRelationFilter
 }, "id">
 
 export type ListingOrderByWithAggregationInput = {
@@ -433,6 +436,7 @@ export type ListingCreateInput = {
   images?: Prisma.ListingImageCreateNestedManyWithoutListingInput
   bookings?: Prisma.BookingCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistCreateNestedManyWithoutListingInput
 }
 
 export type ListingUncheckedCreateInput = {
@@ -455,6 +459,7 @@ export type ListingUncheckedCreateInput = {
   images?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistUncheckedCreateNestedManyWithoutListingInput
 }
 
 export type ListingUpdateInput = {
@@ -477,6 +482,7 @@ export type ListingUpdateInput = {
   images?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUpdateManyWithoutListingNestedInput
 }
 
 export type ListingUncheckedUpdateInput = {
@@ -499,6 +505,7 @@ export type ListingUncheckedUpdateInput = {
   images?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUncheckedUpdateManyWithoutListingNestedInput
 }
 
 export type ListingCreateManyInput = {
@@ -749,6 +756,20 @@ export type ListingUpdateOneRequiredWithoutReviewsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ListingUpdateToOneWithWhereWithoutReviewsInput, Prisma.ListingUpdateWithoutReviewsInput>, Prisma.ListingUncheckedUpdateWithoutReviewsInput>
 }
 
+export type ListingCreateNestedOneWithoutWishlistsInput = {
+  create?: Prisma.XOR<Prisma.ListingCreateWithoutWishlistsInput, Prisma.ListingUncheckedCreateWithoutWishlistsInput>
+  connectOrCreate?: Prisma.ListingCreateOrConnectWithoutWishlistsInput
+  connect?: Prisma.ListingWhereUniqueInput
+}
+
+export type ListingUpdateOneRequiredWithoutWishlistsNestedInput = {
+  create?: Prisma.XOR<Prisma.ListingCreateWithoutWishlistsInput, Prisma.ListingUncheckedCreateWithoutWishlistsInput>
+  connectOrCreate?: Prisma.ListingCreateOrConnectWithoutWishlistsInput
+  upsert?: Prisma.ListingUpsertWithoutWishlistsInput
+  connect?: Prisma.ListingWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ListingUpdateToOneWithWhereWithoutWishlistsInput, Prisma.ListingUpdateWithoutWishlistsInput>, Prisma.ListingUncheckedUpdateWithoutWishlistsInput>
+}
+
 export type ListingCreateWithoutOwnerInput = {
   id?: string
   title: string
@@ -768,6 +789,7 @@ export type ListingCreateWithoutOwnerInput = {
   images?: Prisma.ListingImageCreateNestedManyWithoutListingInput
   bookings?: Prisma.BookingCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistCreateNestedManyWithoutListingInput
 }
 
 export type ListingUncheckedCreateWithoutOwnerInput = {
@@ -789,6 +811,7 @@ export type ListingUncheckedCreateWithoutOwnerInput = {
   images?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistUncheckedCreateNestedManyWithoutListingInput
 }
 
 export type ListingCreateOrConnectWithoutOwnerInput = {
@@ -858,6 +881,7 @@ export type ListingCreateWithoutImagesInput = {
   owner: Prisma.UserCreateNestedOneWithoutListingsInput
   bookings?: Prisma.BookingCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistCreateNestedManyWithoutListingInput
 }
 
 export type ListingUncheckedCreateWithoutImagesInput = {
@@ -879,6 +903,7 @@ export type ListingUncheckedCreateWithoutImagesInput = {
   updatedAt?: Date | string
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistUncheckedCreateNestedManyWithoutListingInput
 }
 
 export type ListingCreateOrConnectWithoutImagesInput = {
@@ -916,6 +941,7 @@ export type ListingUpdateWithoutImagesInput = {
   owner?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUpdateManyWithoutListingNestedInput
 }
 
 export type ListingUncheckedUpdateWithoutImagesInput = {
@@ -937,6 +963,7 @@ export type ListingUncheckedUpdateWithoutImagesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUncheckedUpdateManyWithoutListingNestedInput
 }
 
 export type ListingCreateWithoutBookingsInput = {
@@ -958,6 +985,7 @@ export type ListingCreateWithoutBookingsInput = {
   owner: Prisma.UserCreateNestedOneWithoutListingsInput
   images?: Prisma.ListingImageCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistCreateNestedManyWithoutListingInput
 }
 
 export type ListingUncheckedCreateWithoutBookingsInput = {
@@ -979,6 +1007,7 @@ export type ListingUncheckedCreateWithoutBookingsInput = {
   updatedAt?: Date | string
   images?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistUncheckedCreateNestedManyWithoutListingInput
 }
 
 export type ListingCreateOrConnectWithoutBookingsInput = {
@@ -1016,6 +1045,7 @@ export type ListingUpdateWithoutBookingsInput = {
   owner?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput
   images?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUpdateManyWithoutListingNestedInput
 }
 
 export type ListingUncheckedUpdateWithoutBookingsInput = {
@@ -1037,6 +1067,7 @@ export type ListingUncheckedUpdateWithoutBookingsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   images?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUncheckedUpdateManyWithoutListingNestedInput
 }
 
 export type ListingCreateWithoutReviewsInput = {
@@ -1058,6 +1089,7 @@ export type ListingCreateWithoutReviewsInput = {
   owner: Prisma.UserCreateNestedOneWithoutListingsInput
   images?: Prisma.ListingImageCreateNestedManyWithoutListingInput
   bookings?: Prisma.BookingCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistCreateNestedManyWithoutListingInput
 }
 
 export type ListingUncheckedCreateWithoutReviewsInput = {
@@ -1079,6 +1111,7 @@ export type ListingUncheckedCreateWithoutReviewsInput = {
   updatedAt?: Date | string
   images?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutListingInput
+  wishlists?: Prisma.WishlistUncheckedCreateNestedManyWithoutListingInput
 }
 
 export type ListingCreateOrConnectWithoutReviewsInput = {
@@ -1116,6 +1149,7 @@ export type ListingUpdateWithoutReviewsInput = {
   owner?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput
   images?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUpdateManyWithoutListingNestedInput
 }
 
 export type ListingUncheckedUpdateWithoutReviewsInput = {
@@ -1137,6 +1171,111 @@ export type ListingUncheckedUpdateWithoutReviewsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   images?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUncheckedUpdateManyWithoutListingNestedInput
+}
+
+export type ListingCreateWithoutWishlistsInput = {
+  id?: string
+  title: string
+  description: string
+  type: $Enums.ListingType
+  status?: $Enums.ListingStatus
+  price: number
+  address: string
+  area: string
+  city?: string
+  totalRooms?: number | null
+  totalSeats?: number | null
+  isAvailable?: boolean
+  isDeleted?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  owner: Prisma.UserCreateNestedOneWithoutListingsInput
+  images?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  bookings?: Prisma.BookingCreateNestedManyWithoutListingInput
+  reviews?: Prisma.ReviewCreateNestedManyWithoutListingInput
+}
+
+export type ListingUncheckedCreateWithoutWishlistsInput = {
+  id?: string
+  title: string
+  description: string
+  type: $Enums.ListingType
+  status?: $Enums.ListingStatus
+  price: number
+  address: string
+  area: string
+  city?: string
+  totalRooms?: number | null
+  totalSeats?: number | null
+  isAvailable?: boolean
+  isDeleted?: boolean
+  ownerId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  images?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutListingInput
+  reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutListingInput
+}
+
+export type ListingCreateOrConnectWithoutWishlistsInput = {
+  where: Prisma.ListingWhereUniqueInput
+  create: Prisma.XOR<Prisma.ListingCreateWithoutWishlistsInput, Prisma.ListingUncheckedCreateWithoutWishlistsInput>
+}
+
+export type ListingUpsertWithoutWishlistsInput = {
+  update: Prisma.XOR<Prisma.ListingUpdateWithoutWishlistsInput, Prisma.ListingUncheckedUpdateWithoutWishlistsInput>
+  create: Prisma.XOR<Prisma.ListingCreateWithoutWishlistsInput, Prisma.ListingUncheckedCreateWithoutWishlistsInput>
+  where?: Prisma.ListingWhereInput
+}
+
+export type ListingUpdateToOneWithWhereWithoutWishlistsInput = {
+  where?: Prisma.ListingWhereInput
+  data: Prisma.XOR<Prisma.ListingUpdateWithoutWishlistsInput, Prisma.ListingUncheckedUpdateWithoutWishlistsInput>
+}
+
+export type ListingUpdateWithoutWishlistsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumListingTypeFieldUpdateOperationsInput | $Enums.ListingType
+  status?: Prisma.EnumListingStatusFieldUpdateOperationsInput | $Enums.ListingStatus
+  price?: Prisma.FloatFieldUpdateOperationsInput | number
+  address?: Prisma.StringFieldUpdateOperationsInput | string
+  area?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  totalRooms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalSeats?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isAvailable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  owner?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput
+  images?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  bookings?: Prisma.BookingUpdateManyWithoutListingNestedInput
+  reviews?: Prisma.ReviewUpdateManyWithoutListingNestedInput
+}
+
+export type ListingUncheckedUpdateWithoutWishlistsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumListingTypeFieldUpdateOperationsInput | $Enums.ListingType
+  status?: Prisma.EnumListingStatusFieldUpdateOperationsInput | $Enums.ListingStatus
+  price?: Prisma.FloatFieldUpdateOperationsInput | number
+  address?: Prisma.StringFieldUpdateOperationsInput | string
+  area?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  totalRooms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalSeats?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isAvailable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  images?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  bookings?: Prisma.BookingUncheckedUpdateManyWithoutListingNestedInput
+  reviews?: Prisma.ReviewUncheckedUpdateManyWithoutListingNestedInput
 }
 
 export type ListingCreateManyOwnerInput = {
@@ -1176,6 +1315,7 @@ export type ListingUpdateWithoutOwnerInput = {
   images?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUpdateManyWithoutListingNestedInput
 }
 
 export type ListingUncheckedUpdateWithoutOwnerInput = {
@@ -1197,6 +1337,7 @@ export type ListingUncheckedUpdateWithoutOwnerInput = {
   images?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutListingNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutListingNestedInput
+  wishlists?: Prisma.WishlistUncheckedUpdateManyWithoutListingNestedInput
 }
 
 export type ListingUncheckedUpdateManyWithoutOwnerInput = {
@@ -1226,12 +1367,14 @@ export type ListingCountOutputType = {
   images: number
   bookings: number
   reviews: number
+  wishlists: number
 }
 
 export type ListingCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   images?: boolean | ListingCountOutputTypeCountImagesArgs
   bookings?: boolean | ListingCountOutputTypeCountBookingsArgs
   reviews?: boolean | ListingCountOutputTypeCountReviewsArgs
+  wishlists?: boolean | ListingCountOutputTypeCountWishlistsArgs
 }
 
 /**
@@ -1265,6 +1408,13 @@ export type ListingCountOutputTypeCountReviewsArgs<ExtArgs extends runtime.Types
   where?: Prisma.ReviewWhereInput
 }
 
+/**
+ * ListingCountOutputType without action
+ */
+export type ListingCountOutputTypeCountWishlistsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WishlistWhereInput
+}
+
 
 export type ListingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1287,6 +1437,7 @@ export type ListingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   images?: boolean | Prisma.Listing$imagesArgs<ExtArgs>
   bookings?: boolean | Prisma.Listing$bookingsArgs<ExtArgs>
   reviews?: boolean | Prisma.Listing$reviewsArgs<ExtArgs>
+  wishlists?: boolean | Prisma.Listing$wishlistsArgs<ExtArgs>
   _count?: boolean | Prisma.ListingCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["listing"]>
 
@@ -1355,6 +1506,7 @@ export type ListingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   images?: boolean | Prisma.Listing$imagesArgs<ExtArgs>
   bookings?: boolean | Prisma.Listing$bookingsArgs<ExtArgs>
   reviews?: boolean | Prisma.Listing$reviewsArgs<ExtArgs>
+  wishlists?: boolean | Prisma.Listing$wishlistsArgs<ExtArgs>
   _count?: boolean | Prisma.ListingCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ListingIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1371,6 +1523,7 @@ export type $ListingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     images: Prisma.$ListingImagePayload<ExtArgs>[]
     bookings: Prisma.$BookingPayload<ExtArgs>[]
     reviews: Prisma.$ReviewPayload<ExtArgs>[]
+    wishlists: Prisma.$WishlistPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1787,6 +1940,7 @@ export interface Prisma__ListingClient<T, Null = never, ExtArgs extends runtime.
   images<T extends Prisma.Listing$imagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Listing$imagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ListingImagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   bookings<T extends Prisma.Listing$bookingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Listing$bookingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviews<T extends Prisma.Listing$reviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Listing$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  wishlists<T extends Prisma.Listing$wishlistsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Listing$wishlistsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WishlistPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2302,6 +2456,30 @@ export type Listing$reviewsArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.ReviewScalarFieldEnum | Prisma.ReviewScalarFieldEnum[]
+}
+
+/**
+ * Listing.wishlists
+ */
+export type Listing$wishlistsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Wishlist
+   */
+  select?: Prisma.WishlistSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Wishlist
+   */
+  omit?: Prisma.WishlistOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WishlistInclude<ExtArgs> | null
+  where?: Prisma.WishlistWhereInput
+  orderBy?: Prisma.WishlistOrderByWithRelationInput | Prisma.WishlistOrderByWithRelationInput[]
+  cursor?: Prisma.WishlistWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WishlistScalarFieldEnum | Prisma.WishlistScalarFieldEnum[]
 }
 
 /**

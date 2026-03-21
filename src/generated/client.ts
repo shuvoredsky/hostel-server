@@ -89,3 +89,8 @@ export type Payment = Prisma.PaymentModel
  * 
  */
 export type ExtraCharge = Prisma.ExtraChargeModel
+/**
+ * Model Wishlist
+ * 
+ */
+export type Wishlist = Prisma.WishlistModel

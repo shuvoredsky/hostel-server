@@ -60,7 +60,8 @@ export const ModelName = {
   Booking: 'Booking',
   Review: 'Review',
   Payment: 'Payment',
-  ExtraCharge: 'ExtraCharge'
+  ExtraCharge: 'ExtraCharge',
+  Wishlist: 'Wishlist'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -233,6 +234,17 @@ export const ExtraChargeScalarFieldEnum = {
 } as const
 
 export type ExtraChargeScalarFieldEnum = (typeof ExtraChargeScalarFieldEnum)[keyof typeof ExtraChargeScalarFieldEnum]
+
+
+export const WishlistScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  listingId: 'listingId',
+  createdAt: 'createdAt',
+  userId: 'userId'
+} as const
+
+export type WishlistScalarFieldEnum = (typeof WishlistScalarFieldEnum)[keyof typeof WishlistScalarFieldEnum]
 
 
 export const SortOrder = {

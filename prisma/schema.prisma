@@ -43,8 +43,10 @@ model User {
   ownerBookings   Booking[] @relation("OwnerBookings")
 
   // Payment relation
-  payments Payment[] @relation("StudentPayments")
-  bookings Booking[]
+  payments  Payment[]  @relation("StudentPayments")
+  bookings  Booking[]
+  wishlist  Wishlist[] @relation("StudentWishlist")
+  wishlists Wishlist[]
 }
 
 model Session {
@@ -122,8 +124,9 @@ model Listing {
   bookings Booking[]
   reviews  Review[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  wishlists Wishlist[]
 }
 
 model ListingImage {
@@ -210,4 +213,18 @@ model ExtraCharge {
   updatedAt   DateTime @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  studentId String
+  listingId String
+  createdAt DateTime @default(now())
+
+  student User    @relation("StudentWishlist", fields: [studentId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+  userId  String?
+
+  @@unique([studentId, listingId])
 }
