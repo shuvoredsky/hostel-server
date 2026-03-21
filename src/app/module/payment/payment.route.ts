@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Role } from '../../../generated';
 import { checkAuth } from '../../middleware/checkAuth';
 import { PaymentController } from './payment.controller';
+import { InvoiceController } from './invoice.controller';
 
 const router = Router();
 
@@ -17,6 +18,20 @@ router.get(
   '/my-payments',
   checkAuth(Role.STUDENT),
   PaymentController.getMyPayments,
+);
+
+
+router.get(
+  '/invoice/:paymentId',
+  checkAuth(Role.OWNER),
+  InvoiceController.downloadInvoice,
+);
+
+// Owner — নিজের listing এর payments দেখবে
+router.get(
+  '/owner/all',
+  checkAuth(Role.OWNER),
+  PaymentController.getOwnerPayments,
 );
 
 // Admin — সব payments দেখবে + commission

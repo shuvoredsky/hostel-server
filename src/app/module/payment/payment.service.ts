@@ -175,6 +175,27 @@ const getMyPayments = async (user: IRequestUser) => {
   return payments;
 };
 
+
+const getOwnerPayments = async (user: IRequestUser) => {
+  const payments = await prisma.payment.findMany({
+    where: {
+      booking: { ownerId: user.userId },
+      status: 'PAID',
+    },
+    include: {
+      student: { select: { id: true, name: true, email: true } },
+      booking: {
+        include: {
+          listing: { select: { id: true, title: true, area: true } },
+        },
+      },
+    },
+    orderBy: { paidAt: 'desc' },
+  });
+
+  return payments;
+};
+
 // ─── Get All Payments (Admin) ──────────────────────────────────────────────────
 const getAllPayments = async () => {
   const payments = await prisma.payment.findMany({
@@ -208,4 +229,5 @@ export const PaymentService = {
   paymentCancel,
   getMyPayments,
   getAllPayments,
+  getOwnerPayments,
 };

@@ -58,6 +58,20 @@ const getMyPayments = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+const getOwnerPayments = catchAsync(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const result = await PaymentService.getOwnerPayments(user);
+
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: 'Owner payments fetched successfully',
+    data: result,
+  });
+});
+
 // ─── Get All Payments (Admin) ──────────────────────────────────────────────────
 const getAllPayments = catchAsync(async (req: Request, res: Response) => {
   const result = await PaymentService.getAllPayments();
@@ -77,4 +91,5 @@ export const PaymentController = {
   paymentCancel,
   getMyPayments,
   getAllPayments,
+  getOwnerPayments,
 };
