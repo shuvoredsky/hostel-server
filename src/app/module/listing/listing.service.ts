@@ -36,29 +36,92 @@ const createListing = async (
 
 // ─── Get All Approved Listings (Public) ───────────────────────────────────────
 const getAllListings = async (filters: IListingFilterPayload) => {
-  const { type, area, city, minPrice, maxPrice, isAvailable } = filters;
+  const {
+    type,
+    area,
+    city,
+    minPrice,
+    maxPrice,
+    isAvailable,
+    search,
+    sortBy,
+    sortOrder,
+    page,
+    limit,
+  } = filters;
 
-  const listings = await prisma.listing.findMany({
-    where: {
-      status: ListingStatus.APPROVED,
-      isDeleted: false,
-      ...(type && { type }),
-      ...(area && { area: { contains: area, mode: 'insensitive' } }),
-      ...(city && { city: { contains: city, mode: 'insensitive' } }),
-      ...(minPrice && { price: { gte: minPrice } }),
-      ...(maxPrice && { price: { lte: maxPrice } }),
-      ...(isAvailable !== undefined && { isAvailable }),
-    },
-    include: {
-      images: true,
-      owner: {
-        select: { id: true, name: true, email: true },
+  const pageNumber = page || 1;
+  const pageSize = limit || 10;
+  const skip = (pageNumber - 1) * pageSize;
+
+  const where: any = {
+    status: 'APPROVED',
+    isDeleted: false,
+    ...(type && { type }),
+    ...(area && { area: { contains: area, mode: 'insensitive' } }),
+    ...(city && { city: { contains: city, mode: 'insensitive' } }),
+    ...(minPrice && { price: { gte: minPrice } }),
+    ...(maxPrice && { price: { lte: maxPrice } }),
+    ...(isAvailable !== undefined && { isAvailable }),
+    // Search by title or description or address
+    ...(search && {
+      OR: [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+        { area: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+  };
+
+  const orderBy: any = sortBy
+    ? { [sortBy]: sortOrder || 'asc' }
+    : { createdAt: 'desc' };
+
+  const [listings, total] = await Promise.all([
+    prisma.listing.findMany({
+      where,
+      include: {
+        images: true,
+        owner: {
+          select: { id: true, name: true, email: true },
+        },
+        reviews: {
+          select: { rating: true },
+        },
       },
-    },
-    orderBy: { createdAt: 'desc' },
+      orderBy,
+      skip,
+      take: pageSize,
+    }),
+    prisma.listing.count({ where }),
+  ]);
+
+  // Average rating calculate করো
+  const listingsWithRating = listings.map((listing) => {
+    const ratings = listing.reviews.map((r) => r.rating);
+    const avgRating =
+      ratings.length > 0
+        ? parseFloat((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
+        : 0;
+
+    return {
+      ...listing,
+      avgRating,
+      totalReviews: ratings.length,
+      reviews: undefined,
+    };
   });
 
-  return listings;
+  return {
+    listings: listingsWithRating,
+    meta: {
+      page: pageNumber,
+      limit: pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+    },
+  };
 };
 
 // ─── Get Single Listing ───────────────────────────────────────────────────────

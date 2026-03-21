@@ -61,6 +61,39 @@ const createBooking = async (payload: ICreateBookingPayload, user: IRequestUser)
   return booking;
 };
 
+
+
+const addExtraCharge = async (
+  bookingId: string,
+  payload: { title: string; amount: number; description?: string },
+  user: IRequestUser,
+) => {
+  const booking = await prisma.booking.findFirst({
+    where: { id: bookingId, ownerId: user.userId },
+  });
+
+  if (!booking) {
+    throw new AppError(status.NOT_FOUND, 'Booking not found');
+  }
+
+  if (booking.status !== 'CONFIRMED') {
+    throw new AppError(status.BAD_REQUEST, 'Can only add charges to confirmed bookings');
+  }
+
+  const charge = await prisma.extraCharge.create({
+    data: {
+      bookingId,
+      title: payload.title,
+      amount: payload.amount,
+      description: payload.description,
+    },
+  });
+
+  return charge;
+};
+
+
+
 // ─── Get My Bookings (Student) ────────────────────────────────────────────────
 const getMyBookings = async (user: IRequestUser) => {
   const bookings = await prisma.booking.findMany({
@@ -229,4 +262,5 @@ export const BookingService = {
   cancelBooking,
   getSingleBooking,
   getAllBookings,
+  addExtraCharge
 };

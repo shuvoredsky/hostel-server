@@ -31,4 +31,9 @@ export interface IListingFilterPayload {
   minPrice?: number;
   maxPrice?: number;
   isAvailable?: boolean;
+  search?: string;
+  sortBy?: 'price' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }

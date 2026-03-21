@@ -36,6 +36,11 @@ const getAllListings = catchAsync(async (req: Request, res: Response) => {
     minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
     maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
     isAvailable: req.query.isAvailable ? req.query.isAvailable === 'true' : undefined,
+    search: req.query.search as string,
+    sortBy: req.query.sortBy as any,
+    sortOrder: req.query.sortOrder as any,
+    page: req.query.page ? Number(req.query.page) : undefined,
+    limit: req.query.limit ? Number(req.query.limit) : undefined,
   };
 
   const result = await ListingService.getAllListings(filters);
@@ -44,7 +49,8 @@ const getAllListings = catchAsync(async (req: Request, res: Response) => {
     httpStatusCode: status.OK,
     success: true,
     message: 'Listings fetched successfully',
-    data: result,
+    data: result.listings,
+    meta: result.meta,
   });
 });
 

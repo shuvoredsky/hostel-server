@@ -14,6 +14,11 @@ router.patch('/owner/:id/status', checkAuth(Role.OWNER), BookingController.updat
 
 // Student
 router.post('/', checkAuth(Role.STUDENT), BookingController.createBooking);
+router.post(
+  '/:id/extra-charge',
+  checkAuth(Role.OWNER),
+  BookingController.addExtraCharge,
+);
 router.get('/my-bookings', checkAuth(Role.STUDENT), BookingController.getMyBookings);
 router.patch('/cancel/:id', checkAuth(Role.STUDENT), BookingController.cancelBooking);
 

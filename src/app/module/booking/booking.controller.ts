@@ -18,6 +18,25 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+
+const addExtraCharge = catchAsync(async (req: Request, res: Response) => {
+  const bookingId = req.params.id as string;
+  const user = (req as any).user;
+
+  const result = await BookingService.addExtraCharge(bookingId, req.body, user);
+
+  sendResponse(res, {
+    httpStatusCode: status.CREATED,
+    success: true,
+    message: 'Extra charge added successfully',
+    data: result,
+  });
+});
+
+
+
 // ─── Get My Bookings (Student) ────────────────────────────────────────────────
 const getMyBookings = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
@@ -108,4 +127,5 @@ export const BookingController = {
   cancelBooking,
   getSingleBooking,
   getAllBookings,
+  addExtraCharge
 };
