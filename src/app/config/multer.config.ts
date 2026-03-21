@@ -48,3 +48,36 @@ export const profileUpload = multer({
   fileFilter: imageFileFilter,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
 });
+
+
+// Logo এর জন্য storage
+const logoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'dhakastay/site/logo',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'svg'],
+    transformation: [{ width: 400, height: 400, crop: 'limit' }],
+  } as any,
+});
+
+// Banner এর জন্য storage
+const bannerStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'dhakastay/site/banners',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 1920, height: 600, crop: 'limit' }],
+  } as any,
+});
+
+export const logoUpload = multer({
+  storage: logoStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 2 * 1024 * 1024 },
+});
+
+export const bannerUpload = multer({
+  storage: bannerStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
