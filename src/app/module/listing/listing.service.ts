@@ -57,6 +57,10 @@ const getAllListings = async (filters: IListingFilterPayload) => {
   const where: any = {
     status: 'APPROVED',
     isDeleted: false,
+     owner: {
+    status: 'ACTIVE',
+    isDeleted: false,
+  },
     ...(type && { type }),
     ...(area && { area: { contains: area, mode: 'insensitive' } }),
     ...(city && { city: { contains: city, mode: 'insensitive' } }),

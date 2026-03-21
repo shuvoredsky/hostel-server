@@ -6,7 +6,8 @@ import { ListingRoutes } from '../app/module/listing/listing.route';
 import { BookingRoutes } from '../app/module/booking/booking.route';
 import { PaymentRoutes } from '../app/module/payment/payment.route';
 import { DashboardRoutes } from '../app/module/dashboard/dashboard.route';
-
+import { ReviewRoutes } from '../app/module/review/review.route';
+import { UserRoutes } from '../app/module/user/user.route';
 
 const router = Router();
 
@@ -21,5 +22,7 @@ router.use('/bookings', BookingRoutes);
 console.log('Booking routes registered');
 router.use('/payments', PaymentRoutes);
 router.use('/dashboard', DashboardRoutes);
+router.use('/reviews', ReviewRoutes);
+router.use('/users', UserRoutes);
 
 export default router;
