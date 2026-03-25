@@ -9,7 +9,6 @@ process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled Rejection:', err);
 });
 
-// ✅ সঠিকভাবে PORT হ্যান্ডেল করা হয়েছে
 const PORT = Number(process.env.PORT) || Number(envVars.PORT) || 8000;
 
 const server = app.listen(PORT, '0.0.0.0', () => {
