@@ -4,13 +4,12 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-    "dev": "npx kill-port 8000 && nodemon --exec ts-node server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
-  },
+  "dev": "npx kill-port 8000 && nodemon --exec ts-node server.ts",
+  "build": "prisma generate && tsc",          
+  "start": "node dist/server.js",
+  "db:migrate": "prisma migrate deploy",      
+  "db:generate": "prisma generate"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
