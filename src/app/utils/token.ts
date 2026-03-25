@@ -4,10 +4,13 @@ import { envVars } from '../../config/env';
 import { Response } from 'express';
 import { CookieUtils } from './cookie';
 
+
+const isProduction = process.env.NODE_ENV === 'production';
+
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
-  sameSite: 'none' as const,
+  secure: isProduction,
+  sameSite: isProduction ? 'none' as const : 'lax' as const,
   path: '/',
 };
 
