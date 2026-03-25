@@ -9,10 +9,11 @@ process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled Rejection:', err);
 });
 
-const PORT = envVars.PORT || process.env.PORT || 8000;
+// ✅ সঠিকভাবে PORT হ্যান্ডেল করা হয়েছে
+const PORT = Number(process.env.PORT) || Number(envVars.PORT) || 8000;
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Dhaka-Stay Server running on http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Dhaka-Stay Server running on http://0.0.0.0:${PORT}`);
 });
 
 server.on('error', (err) => {
