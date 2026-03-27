@@ -2,14 +2,15 @@
   "name": "my-server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.ts",
+  "main": "dist/server.js",
   "scripts": {
-  "dev": "npx kill-port 8000 && nodemon --exec ts-node server.ts",
-  "build": "prisma generate && tsc",          
-  "start": "node dist/server.js",
-  "db:migrate": "prisma migrate deploy",      
-  "db:generate": "prisma generate"
-},
+    "dev": "tsx watch src/server.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/server.js",
+    "db:migrate": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -46,6 +47,7 @@
     "nodemon": "^3.1.14",
     "prisma": "^7.5.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

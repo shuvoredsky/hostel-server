@@ -1,10 +1,10 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { envVars } from './src/config/env';
-import globalErrorHandler from './src/app/middleware/globalErrorHandler';
-import notFound from './src/app/middleware/notFound';
-import router from './src/routes';
+import { envVars } from './config/env';
+import globalErrorHandler from './app/middleware/globalErrorHandler';
+import notFound from './app/middleware/notFound';
+import router from './routes';
 
 const app: Application = express();
 

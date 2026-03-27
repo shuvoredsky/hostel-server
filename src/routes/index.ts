@@ -15,13 +15,12 @@ const router = Router();
 
 
 
-router.use('/bookings', BookingRoutes);
+
 
 router.all('/auth/better/{*path}', toNodeHandler(auth));
 router.use('/auth', AuthRoutes);
 router.use('/listings', ListingRoutes);
 router.use('/bookings', BookingRoutes);
-console.log('Booking routes registered');
 router.use('/payments', PaymentRoutes);
 router.use('/dashboard', DashboardRoutes);
 router.use('/reviews', ReviewRoutes);

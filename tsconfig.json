@@ -2,13 +2,14 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "rootDir": ".",
+    "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "typeRoots": ["./node_modules/@types", "./src/app/interface"]
+    "sourceMap": true,
+    "declaration": true
   },
-  "include": ["src/**/*", "config/**/*", "app.ts", "server.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

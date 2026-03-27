@@ -1,5 +1,5 @@
 import app from './app';
-import { envVars } from './src/config/env';
+import { envVars } from './config/env';
 
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
