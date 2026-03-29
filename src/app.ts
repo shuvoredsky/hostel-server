@@ -8,7 +8,15 @@ import router from './routes';
 
 const app: Application = express();
 
-app.use(cors({ origin: envVars.FRONTEND_URL, credentials: true }));
+app.use(
+  cors({
+    origin: [
+      'http://localhost:3000',
+      'https://hostel-client-theta.vercel.app',
+    ],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 
