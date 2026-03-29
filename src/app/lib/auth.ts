@@ -5,6 +5,8 @@ import { bearer, emailOTP } from 'better-auth/plugins';
 import { Role, UserStatus } from '../../generated';
 import { envVars } from '../../config/env';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const auth = betterAuth({
   baseURL: envVars.BETTER_AUTH_URL,
   secret: envVars.BETTER_AUTH_SECRET,
@@ -58,7 +60,6 @@ export const auth = betterAuth({
         if (!user) return;
 
         if (type === 'email-verification' && !user.emailVerified) {
-          // TODO: sendEmail লাগাবে পরে
           console.log(`[OTP] Email verification OTP for ${email}: ${otp}`);
         }
 
@@ -78,22 +79,44 @@ export const auth = betterAuth({
       enabled: true,
       maxAge: 60 * 60 * 24,
     },
+    // ✅ env অনুযায়ী cookie config
+    cookie: {
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction,
+      httpOnly: true,
+    },
   },
 
   redirectURLs: {
     signIn: `${envVars.BETTER_AUTH_URL}/api/v1/auth/google/success`,
   },
 
-  trustedOrigins: [envVars.BETTER_AUTH_URL, envVars.FRONTEND_URL],
+  // ✅ localhost যোগ করা হয়েছে
+  trustedOrigins: [
+    envVars.BETTER_AUTH_URL,
+    envVars.FRONTEND_URL,
+    'http://localhost:3000',
+  ],
 
   advanced: {
-    useSecureCookies: false,
+    // ✅ মূল fix — production এ true, development এ false
+    useSecureCookies: isProduction,
     cookies: {
       state: {
-        attributes: { sameSite: 'none', secure: true, httpOnly: true, path: '/' },
+        attributes: {
+          sameSite: isProduction ? 'none' : 'lax',
+          secure: isProduction,
+          httpOnly: true,
+          path: '/',
+        },
       },
       sessionToken: {
-        attributes: { sameSite: 'none', secure: true, httpOnly: true, path: '/' },
+        attributes: {
+          sameSite: isProduction ? 'none' : 'lax',
+          secure: isProduction,
+          httpOnly: true,
+          path: '/',
+        },
       },
     },
   },
