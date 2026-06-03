@@ -23,7 +23,7 @@ router.get(
 
 router.get(
   '/invoice/:paymentId',
-  checkAuth(Role.OWNER),
+  checkAuth(Role.OWNER, Role.STUDENT, Role.ADMIN),
   InvoiceController.downloadInvoice,
 );
 
