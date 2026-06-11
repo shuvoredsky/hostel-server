@@ -6,7 +6,7 @@ const downloadInvoice = catchAsync(async (req: Request, res: Response) => {
   const paymentId = req.params.paymentId as string;
   const user = (req as any).user;
 
-  await InvoiceService.generateInvoicePDF(paymentId, user.userId, res);
+await InvoiceService.generateInvoicePDF(paymentId, user.userId, user.role, res);
 });
 
 export const InvoiceController = {

@@ -200,6 +200,9 @@ const getOwnerPayments = async (user: IRequestUser) => {
 const getAllPayments = async () => {
   const payments = await prisma.payment.findMany({
     include: {
+      student: {                    
+        select: { id: true, name: true, email: true },
+      },
       booking: {
         include: {
           listing: {
@@ -214,7 +217,6 @@ const getAllPayments = async () => {
     orderBy: { createdAt: 'desc' },
   });
 
-  // Total commission calculate করো
   const totalCommission = payments
     .filter((p) => p.status === 'PAID')
     .reduce((sum, p) => sum + p.commission, 0);
