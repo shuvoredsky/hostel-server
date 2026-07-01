@@ -11,6 +11,7 @@ enum Role {
   ADMIN
   OWNER
   STUDENT
+  TENANT
 }
 
 enum UserStatus {
@@ -100,6 +101,21 @@ enum ListingType {
   ROOM
   SEAT
   BASHA
+}
+
+enum TenantType {
+  JOB_HOLDER
+  FREELANCER
+  INTERN
+  BUSINESS_PERSON
+  FAMILY
+  OTHERS
+}
+
+enum StudentVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
 
 enum ListingStatus {
