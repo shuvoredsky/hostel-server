@@ -50,6 +50,23 @@ export const profileUpload = multer({
 });
 
 
+// Student ID card এর জন্য storage
+const studentIdStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'dhakastay/student-id-cards',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+    transformation: [{ width: 1200, height: 1200, crop: 'limit' }],
+  } as any,
+});
+
+export const studentIdUpload = multer({
+  storage: studentIdStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 3 * 1024 * 1024 }, // 3MB
+});
+
+
 // Logo এর জন্য storage
 const logoStorage = new CloudinaryStorage({
   cloudinary,

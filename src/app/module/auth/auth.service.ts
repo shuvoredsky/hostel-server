@@ -13,6 +13,7 @@ import {
   ILoginUserPayload,
   IRegisterOwnerPayload,
   IRegisterStudentPayload,
+  IRegisterTenantPayload,
 } from './auth.interface';
 
 // ─── Register Student ─────────────────────────────────────────────────────────
@@ -100,6 +101,53 @@ const registerOwner = async (payload: IRegisterOwnerPayload) => {
     throw error;
   }
 };
+
+
+// ─── Register Tenant ──────────────────────────────────────────────────────────
+const registerTenant = async (payload: IRegisterTenantPayload) => {
+  const { name, email, password, tenantType } = payload;
+
+  const data = await auth.api.signUpEmail({
+    body: { name, email, password },
+  });
+
+  if (!data.user) {
+    throw new AppError(status.BAD_REQUEST, 'Failed to register tenant');
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: data.user.id },
+      data: { role: Role.TENANT, tenantType },
+    });
+
+    const accessToken = tokenUtils.getAccessToken({
+      userId: data.user.id,
+      role: Role.TENANT,
+      name: data.user.name,
+      email: data.user.email,
+      status: data.user.status,
+      isDeleted: data.user.isDeleted,
+      emailVerified: data.user.emailVerified,
+    });
+
+    const refreshToken = tokenUtils.getRefreshToken({
+      userId: data.user.id,
+      role: Role.TENANT,
+      name: data.user.name,
+      email: data.user.email,
+      status: data.user.status,
+      isDeleted: data.user.isDeleted,
+      emailVerified: data.user.emailVerified,
+    });
+
+    return { ...data, accessToken, refreshToken };
+  } catch (error) {
+    await prisma.user.delete({ where: { id: data.user.id } });
+    throw error;
+  }
+};
+
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 const loginUser = async (payload: ILoginUserPayload) => {
@@ -330,6 +378,7 @@ const googleLoginSuccess = async (session: Record<string, any>) => {
 export const AuthService = {
   registerStudent,
   registerOwner,
+  registerTenant,
   loginUser,
   getMe,
   getNewToken,

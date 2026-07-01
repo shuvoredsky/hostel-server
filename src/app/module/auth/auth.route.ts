@@ -10,6 +10,7 @@ const ALL_ROLES = [Role.ADMIN, Role.OWNER, Role.STUDENT];
 // Public routes
 router.post('/register/student', AuthController.registerStudent);
 router.post('/register/owner', AuthController.registerOwner);
+router.post('/register/tenant', AuthController.registerTenant);
 router.post('/login', AuthController.loginUser);
 router.post('/verify-email', AuthController.verifyEmail);
 router.post('/forget-password', AuthController.forgetPassword);

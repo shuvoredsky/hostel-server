@@ -21,18 +21,20 @@ enum UserStatus {
 }
 
 model User {
-  id                 String     @id @default(cuid())
-  name               String
-  email              String     @unique
-  emailVerified      Boolean    @default(false)
-  image              String?
-  role               Role       @default(STUDENT)
-  status             UserStatus @default(ACTIVE)
-  needPasswordChange Boolean    @default(false)
-  isDeleted          Boolean    @default(false)
-  deletedAt          DateTime?
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  emailVerified       Boolean              @default(false)
+  image               String?
+  tenantType          TenantType?
+  role                Role                 @default(STUDENT)
+  status              UserStatus           @default(ACTIVE)
+  needPasswordChange  Boolean              @default(false)
+  studentVerification StudentVerification?
+  isDeleted           Boolean              @default(false)
+  deletedAt           DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
   sessions Session[]
   accounts Account[]
@@ -54,6 +56,23 @@ model User {
   sentMessages         Message[]      @relation("SentMessages")
   conversations        Conversation[]
   messages             Message[]
+}
+
+model StudentVerification {
+  id               String                    @id @default(cuid())
+  userId           String                    @unique
+  studentIdCardUrl String
+  universityName   String
+  department       String
+  session          String
+  status           StudentVerificationStatus @default(PENDING)
+  rejectionReason  String?
+  reviewedById     String?
+  reviewedAt       DateTime?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Session {

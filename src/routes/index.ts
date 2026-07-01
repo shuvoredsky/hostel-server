@@ -11,6 +11,8 @@ import { UserRoutes } from '../app/module/user/user.route';
 import { WishlistRoutes } from '../app/module/wishlist/wishlist.route';
 import { SettingsRoutes } from '../app/module/settings/settings.route';
 import { ChatRoutes } from '../app/module/chat/chat.route';
+import { VerificationRoutes } from '../app/module/verification/verification.route';
+
 
 
 const router = Router();
@@ -30,6 +32,7 @@ router.use('/users', UserRoutes);
 router.use('/wishlist', WishlistRoutes);
 router.use('/settings', SettingsRoutes);
 router.use('/chat', ChatRoutes);
+router.use('/verification', VerificationRoutes);
 
 
 export default router;

@@ -43,6 +43,23 @@ const registerOwner = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// ─── Register Tenant ──────────────────────────────────────────────────────────
+const registerTenant = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.registerTenant(req.body);
+  const { accessToken, refreshToken, token, ...rest } = result;
+
+  tokenUtils.setAccessTokenCookie(res, accessToken);
+  tokenUtils.setRefreshTokenCookie(res, refreshToken);
+  tokenUtils.setBetterAuthSessionCookie(res, token as string);
+
+  sendResponse(res, {
+    httpStatusCode: status.CREATED,
+    success: true,
+    message: 'Tenant registered successfully',
+    data: { token, accessToken, refreshToken, ...rest },
+  });
+});
+
 // ─── Login ────────────────────────────────────────────────────────────────────
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
@@ -221,6 +238,7 @@ const handleOAuthError = catchAsync((req: Request, res: Response) => {
 export const AuthController = {
   registerStudent,
   registerOwner,
+  registerTenant,
   loginUser,
   getMe,
   getNewToken,
