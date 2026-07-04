@@ -49,25 +49,28 @@ const getAllListings = async (filters: IListingFilterPayload & { studentId?: str
     page,
     limit,
     studentId,
-  } = filters;
+    genderPreference,   
+    hasDiscount,        
+  } = filters;  
 
   const pageNumber = page || 1;
   const pageSize = limit || 10;
   const skip = (pageNumber - 1) * pageSize;
 
-  const where: any = {
+ const where: any = {
     status: 'APPROVED',
     isDeleted: false,
-    owner: {
-      status: 'ACTIVE',
-      isDeleted: false,
-    },
+    owner: { status: 'ACTIVE', isDeleted: false },
     ...(type && { type }),
     ...(area && { area: { contains: area, mode: 'insensitive' } }),
     ...(city && { city: { contains: city, mode: 'insensitive' } }),
     ...(minPrice && { price: { gte: minPrice } }),
     ...(maxPrice && { price: { lte: maxPrice } }),
     ...(isAvailable !== undefined && { isAvailable }),
+    ...(genderPreference && {
+      OR: [{ genderPreference }, { genderPreference: 'ANYONE' }],
+    }),
+    ...(hasDiscount && { studentDiscountPercent: { gt: 0 } }),
     ...(search && {
       OR: [
         { title: { contains: search, mode: 'insensitive' } },

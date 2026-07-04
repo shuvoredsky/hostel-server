@@ -37,6 +37,7 @@ const getAdminDashboard = async (range: DateRange = 'all') => {
     totalUsers,
     totalStudents,
     totalOwners,
+    totalTenants,
     totalListings,
     totalBookings,
     totalPayments,
@@ -44,6 +45,7 @@ const getAdminDashboard = async (range: DateRange = 'all') => {
     prisma.user.count({ where: { isDeleted: false, ...createdAtFilter } }),
     prisma.user.count({ where: { role: 'STUDENT', isDeleted: false, ...createdAtFilter } }),
     prisma.user.count({ where: { role: 'OWNER', isDeleted: false, ...createdAtFilter } }),
+     prisma.user.count({ where: { role: 'TENANT', isDeleted: false, ...createdAtFilter } }),
     prisma.listing.count({ where: { isDeleted: false, ...createdAtFilter } }),
     prisma.booking.count({ where: { ...createdAtFilter } }),
     prisma.payment.count({ where: { ...createdAtFilter } }),
@@ -95,31 +97,62 @@ const getAdminDashboard = async (range: DateRange = 'all') => {
     .map(([area, count]) => ({ area, totalBookings: count }))
     .sort((a, b) => b.totalBookings - a.totalBookings);
 
-  // ─── Payment & Commission Stats ───────────────────────────────────────────
-  const paidPayments = await prisma.payment.findMany({
-    where: { status: 'PAID', ...paidAtFilter },
+  
+// ─── Payment & Commission Stats (Full + Half-Monthly Installments) ────────
+const [fullPaidPayments, paidInstallments] = await Promise.all([
+  prisma.payment.findMany({
+    where: { status: 'PAID', booking: { paymentPlan: 'FULL' }, ...paidAtFilter },
     select: { amount: true, commission: true },
-  });
+  }),
+  prisma.paymentInstallment.findMany({
+    where: {
+      status: 'PAID',
+      payment: { booking: { paymentPlan: 'HALF_MONTHLY' } },
+      ...(Object.keys(dateFilter).length ? { paidAt: dateFilter } : {}),
+    },
+    select: { amount: true, commission: true },
+  }),
+]);
 
-  const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
-  const totalCommission = paidPayments.reduce((sum, p) => sum + p.commission, 0);
-  const totalPaidCount = paidPayments.length;
+const totalRevenue =
+  fullPaidPayments.reduce((sum, p) => sum + p.amount, 0) +
+  paidInstallments.reduce((sum, i) => sum + i.amount, 0);
 
-  // ─── Commission Per Student ───────────────────────────────────────────────
-  const commissionDetails = await prisma.payment.findMany({
-    where: { status: 'PAID', ...paidAtFilter },
-    include: {
-      student: { select: { id: true, name: true, email: true } },
-      booking: {
-        include: {
-          listing: { select: { title: true, area: true, city: true } },
-        },
+const totalCommission =
+  fullPaidPayments.reduce((sum, p) => sum + p.commission, 0) +
+  paidInstallments.reduce((sum, i) => sum + i.commission, 0);
+
+const totalPaidCount = fullPaidPayments.length + paidInstallments.length;
+
+// ─── Commission Per Student/Tenant (Full + Installment) ───────────────────
+const fullCommissionDetails = await prisma.payment.findMany({
+  where: { status: 'PAID', booking: { paymentPlan: 'FULL' }, ...paidAtFilter },
+  include: {
+    student: { select: { id: true, name: true, email: true } },
+    booking: { include: { listing: { select: { title: true, area: true, city: true } } } },
+  },
+  orderBy: { paidAt: 'desc' },
+});
+
+const installmentCommissionDetails = await prisma.paymentInstallment.findMany({
+  where: {
+    status: 'PAID',
+    payment: { booking: { paymentPlan: 'HALF_MONTHLY' } },
+    ...(Object.keys(dateFilter).length ? { paidAt: dateFilter } : {}),
+  },
+  include: {
+    payment: {
+      include: {
+        student: { select: { id: true, name: true, email: true } },
+        booking: { include: { listing: { select: { title: true, area: true, city: true } } } },
       },
     },
-    orderBy: { paidAt: 'desc' },
-  });
+  },
+  orderBy: { paidAt: 'desc' },
+});
 
-  const commissionList = commissionDetails.map((p) => ({
+const commissionList = [
+  ...fullCommissionDetails.map((p) => ({
     studentName: p.student.name,
     studentEmail: p.student.email,
     listingTitle: p.booking.listing.title,
@@ -128,7 +161,21 @@ const getAdminDashboard = async (range: DateRange = 'all') => {
     amount: p.amount,
     commission: p.commission,
     paidAt: p.paidAt,
-  }));
+    isInstallment: false,
+  })),
+  ...installmentCommissionDetails.map((i) => ({
+    studentName: i.payment.student.name,
+    studentEmail: i.payment.student.email,
+    listingTitle: i.payment.booking.listing.title,
+    area: i.payment.booking.listing.area,
+    city: i.payment.booking.listing.city,
+    amount: i.amount,
+    commission: i.commission,
+    paidAt: i.paidAt,
+    isInstallment: true,
+    installmentNo: i.installmentNo,
+  })),
+].sort((a, b) => new Date(b.paidAt!).getTime() - new Date(a.paidAt!).getTime());
 
   // ─── Recent Bookings ──────────────────────────────────────────────────────
   const recentBookings = await prisma.booking.findMany({
@@ -194,6 +241,7 @@ const getAdminDashboard = async (range: DateRange = 'all') => {
       totalUsers,
       totalStudents,
       totalOwners,
+      totalTenants,
       totalListings,
       totalBookings,
       totalPayments,
@@ -282,6 +330,9 @@ const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
               amount: true,
               commission: true,
               paidAt: true,
+              installments: {                     
+              select: { amount: true, status: true, paidAt: true, commission: true },
+            },
             },
           },
         },
@@ -292,50 +343,72 @@ const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
   });
 
   // প্রতিটা listing এর জন্য stats
-  const listingStats = listingsWithBookings.map((listing) => {
-    const bookings = listing.bookings;
-    const paidBookings = bookings.filter((b) => b.payment?.status === 'PAID');
-    const unpaidBookings = bookings.filter(
-      (b) => b.status === 'ACCEPTED' && b.payment?.status === 'UNPAID',
-    );
+ const listingStats = listingsWithBookings.map((listing) => {
+  const bookings = listing.bookings;
 
-    return {
-      listingId: listing.id,
-      title: listing.title,
-      type: listing.type,
-      area: listing.area,
-      city: listing.city,
-      price: listing.price,
-      status: listing.status,
-      isAvailable: listing.isAvailable,
-      image: listing.images[0]?.url || null,
-      stats: {
-        totalApplicants: bookings.length,
-        pending: bookings.filter((b) => b.status === 'PENDING').length,
-        accepted: bookings.filter((b) => b.status === 'ACCEPTED').length,
-        confirmed: bookings.filter((b) => b.status === 'CONFIRMED').length,
-        rejected: bookings.filter((b) => b.status === 'REJECTED').length,
-        cancelled: bookings.filter((b) => b.status === 'CANCELLED').length,
-        paidCount: paidBookings.length,
-        unpaidCount: unpaidBookings.length,
-        totalRevenue: paidBookings.reduce((sum, b) => sum + (b.payment?.amount || 0), 0),
-      },
-      // কে কে apply করেছে
-      applicants: bookings.map((b) => ({
-        bookingId: b.id,
-        studentName: b.student.name,
-        studentEmail: b.student.email,
-        bookingStatus: b.status,
-        moveInDate: b.moveInDate,
-        paymentStatus: b.payment?.status || 'N/A',
-        amount: b.payment?.amount || 0,
-        paidAt: b.payment?.paidAt || null,
-        bookedAt: b.createdAt,
-      })),
-    };
-  });
+  // প্রতিটা booking এর actual paid amount বের করো (Full অথবা Installment থেকে)
+  const getPaidAmount = (b: (typeof bookings)[number]) => {
+    if (!b.payment) return 0;
+    if (b.payment.status === 'PAID') return b.payment.amount;
+    // Half-monthly হলে যতটুকু installment paid হয়েছে ততটুকু
+    return b.payment.installments
+      .filter((i) => i.status === 'PAID')
+      .reduce((sum, i) => sum + i.amount, 0);
+  };
+
+
+  const getNetEarning = (b: (typeof bookings)[number]) => {
+  if (!b.payment) return 0;
+  if (b.payment.status === 'PAID') return b.payment.amount - b.payment.commission;
+  return b.payment.installments
+    .filter((i) => i.status === 'PAID')
+    .reduce((sum, i) => sum + (i.amount - i.commission), 0);
+};
+
+  const paidBookings = bookings.filter((b) => getPaidAmount(b) > 0);
+  const unpaidBookings = bookings.filter(
+    (b) => b.status === 'ACCEPTED' && getPaidAmount(b) === 0,
+  );
+
+  return {
+    listingId: listing.id,
+    title: listing.title,
+    type: listing.type,
+    area: listing.area,
+    city: listing.city,
+    price: listing.price,
+    status: listing.status,
+    isAvailable: listing.isAvailable,
+    image: listing.images[0]?.url || null,
+    stats: {
+      totalApplicants: bookings.length,
+      pending: bookings.filter((b) => b.status === 'PENDING').length,
+      accepted: bookings.filter((b) => b.status === 'ACCEPTED').length,
+      confirmed: bookings.filter((b) => b.status === 'CONFIRMED').length,
+      rejected: bookings.filter((b) => b.status === 'REJECTED').length,
+      cancelled: bookings.filter((b) => b.status === 'CANCELLED').length,
+      paidCount: paidBookings.length,
+      unpaidCount: unpaidBookings.length,
+        totalRevenue: bookings.reduce((sum, b) => sum + getNetEarning(b), 0),
+        grossAmount: bookings.reduce((sum, b) => sum + getPaidAmount(b), 0),
+
+    },
+    applicants: bookings.map((b) => ({
+      bookingId: b.id,
+      studentName: b.student.name,
+      studentEmail: b.student.email,
+      bookingStatus: b.status,
+      moveInDate: b.moveInDate,
+      paymentStatus: b.payment?.status || 'N/A',
+      amount: getPaidAmount(b),   // fix — actual paid দেখাবে, partial হলেও
+      paidAt: b.payment?.paidAt || null,
+      bookedAt: b.createdAt,
+    })),
+  };
+});
 
   // ─── Payment Stats ────────────────────────────────────────────────────────
+// ─── Payment Stats (Full + Half-Monthly Installments) ─────────────────────
   const allPayments = await prisma.payment.findMany({
     where: {
       booking: { ownerId },
@@ -348,15 +421,36 @@ const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
           listing: { select: { id: true, title: true, area: true } },
         },
       },
+      installments: true,
     },
     orderBy: { createdAt: 'desc' },
   });
 
-  const paidPayments = allPayments.filter((p) => p.status === 'PAID');
-  const unpaidPayments = allPayments.filter((p) => p.status === 'UNPAID');
+  const fullPaidPayments = allPayments.filter(
+    (p) => p.status === 'PAID' && p.booking.paymentPlan === 'FULL',
+  );
+  const paidInstallmentsFlat = allPayments
+    .filter((p) => p.booking.paymentPlan === 'HALF_MONTHLY')
+    .flatMap((p) => p.installments.filter((i) => i.status === 'PAID'));
+
+  const unpaidPayments = allPayments.filter(
+    (p) => p.status === 'UNPAID' && p.booking.paymentPlan === 'FULL',
+  );
   const failedPayments = allPayments.filter((p) => p.status === 'FAILED');
 
-  const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+// Owner এর net earning = amount - commission (প্রতিটা transaction থেকে)
+const grossRevenue =
+  fullPaidPayments.reduce((sum, p) => sum + p.amount, 0) +
+  paidInstallmentsFlat.reduce((sum, i) => sum + i.amount, 0);
+
+const totalCommissionDeducted =
+  fullPaidPayments.reduce((sum, p) => sum + p.commission, 0) +
+  paidInstallmentsFlat.reduce((sum, i) => sum + i.commission, 0);
+
+const totalRevenue = grossRevenue - totalCommissionDeducted; // Owner এর net revenue
+
+  const totalPaidCount = fullPaidPayments.length + paidInstallmentsFlat.length;
+
 
   // ─── Unpaid/Pending Payments (payment baki) ───────────────────────────────
   const pendingPaymentsList = unpaidPayments.map((p) => ({
@@ -372,22 +466,22 @@ const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
     ),
   }));
 
-  // ─── Monthly Payment Breakdown ────────────────────────────────────────────
+ // ─── Monthly Payment Breakdown ────────────────────────────────────────────
   const monthlyPayments: Record<string, { paid: number; revenue: number; count: number }> = {};
 
-  paidPayments.forEach((p) => {
-    if (!p.paidAt) return;
-    const monthKey = new Date(p.paidAt).toLocaleString('default', {
-      month: 'long',
-      year: 'numeric',
-    });
+  const addToMonthly = (paidAt: Date | null, amount: number) => {
+    if (!paidAt) return;
+    const monthKey = new Date(paidAt).toLocaleString('default', { month: 'long', year: 'numeric' });
     if (!monthlyPayments[monthKey]) {
       monthlyPayments[monthKey] = { paid: 0, revenue: 0, count: 0 };
     }
     monthlyPayments[monthKey].paid += 1;
-    monthlyPayments[monthKey].revenue += p.amount;
+    monthlyPayments[monthKey].revenue += amount;
     monthlyPayments[monthKey].count += 1;
-  });
+  };
+
+  fullPaidPayments.forEach((p) => addToMonthly(p.paidAt, p.amount));
+  paidInstallmentsFlat.forEach((i) => addToMonthly(i.paidAt, i.amount));
 
   const monthlyBreakdown = Object.entries(monthlyPayments).map(([month, data]) => ({
     month,
@@ -415,7 +509,9 @@ const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
       rejectedListings,
       totalBookings,
       totalRevenue,
-      totalPaidCount: paidPayments.length,
+      grossRevenue,
+      totalCommissionDeducted,
+      totalPaidCount,
       totalUnpaidCount: unpaidPayments.length,
     },
     bookings: {
@@ -428,7 +524,7 @@ const getOwnerDashboard = async (ownerId: string, range: DateRange = 'all') => {
     listingStats,
     payments: {
       totalRevenue,
-      paidCount: paidPayments.length,
+      paidCount: totalPaidCount,
       unpaidCount: unpaidPayments.length,
       failedCount: failedPayments.length,
       pendingPayments: pendingPaymentsList,
@@ -463,55 +559,62 @@ const getStudentDashboard = async (studentId: string, range: DateRange = 'all') 
     prisma.booking.count({ where: { studentId, status: 'CANCELLED', ...createdAtFilter } }),
   ]);
 
-  // ─── Payment Stats ────────────────────────────────────────────────────────
+// ─── Payment Stats (Full + Half-Monthly Installments) ─────────────────────
   const allPayments = await prisma.payment.findMany({
     where: { studentId, ...createdAtFilter },
     include: {
       booking: {
         include: {
-          listing: {
-            select: { id: true, title: true, area: true, city: true, price: true },
-          },
+          listing: { select: { id: true, title: true, area: true, city: true, price: true } },
           extraCharges: true,
         },
       },
+      installments: true,
     },
     orderBy: { createdAt: 'desc' },
   });
 
-  const paidPayments = allPayments.filter((p) => p.status === 'PAID');
-  const unpaidPayments = allPayments.filter((p) => p.status === 'UNPAID');
+  const fullPaidPayments = allPayments.filter(
+    (p) => p.status === 'PAID' && p.booking.paymentPlan === 'FULL',
+  );
+  const fullUnpaidPayments = allPayments.filter(
+    (p) => p.status === 'UNPAID' && p.booking.paymentPlan === 'FULL',
+  );
 
-  const totalPaid = paidPayments.reduce((sum, p) => sum + p.amount, 0);
-  const totalUnpaid = unpaidPayments.reduce((sum, p) => sum + p.amount, 0);
+  const halfMonthlyPayments = allPayments.filter((p) => p.booking.paymentPlan === 'HALF_MONTHLY');
+  const paidInstallmentsFlat = halfMonthlyPayments.flatMap((p) =>
+    p.installments.filter((i) => i.status === 'PAID').map((i) => ({ ...i, payment: p })),
+  );
+  const pendingInstallmentsFlat = halfMonthlyPayments.flatMap((p) =>
+    p.installments.filter((i) => i.status === 'PENDING').map((i) => ({ ...i, payment: p })),
+  );
+
+  const totalPaid =
+    fullPaidPayments.reduce((sum, p) => sum + p.amount, 0) +
+    paidInstallmentsFlat.reduce((sum, i) => sum + i.amount, 0);
+
+  const totalUnpaid =
+    fullUnpaidPayments.reduce((sum, p) => sum + p.amount, 0) +
+    pendingInstallmentsFlat.reduce((sum, i) => sum + i.amount, 0);
+
+
 
   // ─── Monthly Payment Breakdown ────────────────────────────────────────────
-  const monthlyPayments: Record<string, {
-    paid: number;
-    unpaid: number;
-    paidCount: number;
-    unpaidCount: number;
-  }> = {};
+const monthlyPayments: Record<string, { paid: number; unpaid: number; paidCount: number; unpaidCount: number }> = {};
 
-  allPayments.forEach((p) => {
-    const date = p.paidAt || p.createdAt;
-    const monthKey = new Date(date).toLocaleString('default', {
-      month: 'long',
-      year: 'numeric',
-    });
-
+  const bump = (date: Date | null, field: 'paid' | 'unpaid', amount: number) => {
+    const monthKey = new Date(date || new Date()).toLocaleString('default', { month: 'long', year: 'numeric' });
     if (!monthlyPayments[monthKey]) {
       monthlyPayments[monthKey] = { paid: 0, unpaid: 0, paidCount: 0, unpaidCount: 0 };
     }
+    monthlyPayments[monthKey][field] += amount;
+    monthlyPayments[monthKey][`${field}Count`] += 1;
+  };
 
-    if (p.status === 'PAID') {
-      monthlyPayments[monthKey].paid += p.amount;
-      monthlyPayments[monthKey].paidCount += 1;
-    } else if (p.status === 'UNPAID') {
-      monthlyPayments[monthKey].unpaid += p.amount;
-      monthlyPayments[monthKey].unpaidCount += 1;
-    }
-  });
+  fullPaidPayments.forEach((p) => bump(p.paidAt, 'paid', p.amount));
+  fullUnpaidPayments.forEach((p) => bump(p.createdAt, 'unpaid', p.amount));
+  paidInstallmentsFlat.forEach((i) => bump(i.paidAt, 'paid', i.amount));
+  pendingInstallmentsFlat.forEach((i) => bump(i.dueDate, 'unpaid', i.amount));
 
   const monthlyBreakdown = Object.entries(monthlyPayments).map(([month, data]) => ({
     month,
@@ -519,50 +622,78 @@ const getStudentDashboard = async (studentId: string, range: DateRange = 'all') 
   }));
 
   // ─── Paid Payment Details ─────────────────────────────────────────────────
-  const paidPaymentDetails = paidPayments.map((p) => {
-    const extraTotal = p.booking.extraCharges.reduce((sum, e) => sum + e.amount, 0);
-    return {
-      paymentId: p.id,
-      transactionId: p.transactionId,
-      listingTitle: p.booking.listing.title,
-      area: p.booking.listing.area,
-      city: p.booking.listing.city,
-      baseAmount: p.amount,
-      extraCharges: p.booking.extraCharges.map((e) => ({
-        title: e.title,
-        amount: e.amount,
-        description: e.description,
-      })),
-      extraTotal,
-      totalAmount: p.amount + extraTotal,
-      paidAt: p.paidAt,
-    };
-  });
+const paidPaymentDetails = [
+    ...fullPaidPayments.map((p) => {
+      const extraTotal = p.booking.extraCharges.reduce((sum, e) => sum + e.amount, 0);
+      return {
+        paymentId: p.id,
+        transactionId: p.transactionId,
+        listingTitle: p.booking.listing.title,
+        area: p.booking.listing.area,
+        city: p.booking.listing.city,
+        baseAmount: p.amount,
+        extraCharges: p.booking.extraCharges.map((e) => ({ title: e.title, amount: e.amount, description: e.description })),
+        extraTotal,
+        totalAmount: p.amount + extraTotal,
+        paidAt: p.paidAt,
+        isInstallment: false,
+      };
+    }),
+    ...paidInstallmentsFlat.map((i) => ({
+      paymentId: i.paymentId,
+      transactionId: i.transactionId,
+      listingTitle: i.payment.booking.listing.title,
+      area: i.payment.booking.listing.area,
+      city: i.payment.booking.listing.city,
+      baseAmount: i.amount,
+      extraCharges: [],
+      extraTotal: 0,
+      totalAmount: i.amount,
+      paidAt: i.paidAt,
+      isInstallment: true,
+      installmentNo: i.installmentNo,
+    })),
+  ];
 
   // ─── Unpaid Payment Details ───────────────────────────────────────────────
-  const unpaidPaymentDetails = unpaidPayments.map((p) => {
-    const extraTotal = p.booking.extraCharges.reduce((sum, e) => sum + e.amount, 0);
-    const daysWaiting = Math.floor(
-      (new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24),
-    );
-    return {
-      paymentId: p.id,
-      bookingId: p.bookingId,
-      listingTitle: p.booking.listing.title,
-      area: p.booking.listing.area,
-      city: p.booking.listing.city,
-      baseAmount: p.amount,
-      extraCharges: p.booking.extraCharges.map((e) => ({
-        title: e.title,
-        amount: e.amount,
-        description: e.description,
-      })),
-      extraTotal,
-      totalDue: p.amount + extraTotal,
-      daysWaiting,
-      acceptedAt: p.createdAt,
-    };
-  });
+const unpaidPaymentDetails = [
+    ...fullUnpaidPayments.map((p) => {
+      const extraTotal = p.booking.extraCharges.reduce((sum, e) => sum + e.amount, 0);
+      const daysWaiting = Math.floor((new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+      return {
+        paymentId: p.id,
+        bookingId: p.bookingId,
+        listingTitle: p.booking.listing.title,
+        area: p.booking.listing.area,
+        city: p.booking.listing.city,
+        baseAmount: p.amount,
+        extraCharges: p.booking.extraCharges.map((e) => ({ title: e.title, amount: e.amount, description: e.description })),
+        extraTotal,
+        totalDue: p.amount + extraTotal,
+        daysWaiting,
+        acceptedAt: p.createdAt,
+        isInstallment: false,
+      };
+    }),
+    ...pendingInstallmentsFlat.map((i) => ({
+      paymentId: i.paymentId,
+      bookingId: i.payment.bookingId,
+      listingTitle: i.payment.booking.listing.title,
+      area: i.payment.booking.listing.area,
+      city: i.payment.booking.listing.city,
+      baseAmount: i.amount,
+      extraCharges: [],
+      extraTotal: 0,
+      totalDue: i.amount,
+      daysWaiting: i.dueDate
+        ? Math.floor((new Date().getTime() - new Date(i.dueDate).getTime()) / (1000 * 60 * 60 * 24))
+        : 0,
+      acceptedAt: i.payment.createdAt,
+      isInstallment: true,
+      installmentNo: i.installmentNo,
+      dueDate: i.dueDate,
+    })),
+  ];
 
   // ─── Active Bookings (Confirmed) ──────────────────────────────────────────
   const activeBookings = await prisma.booking.findMany({
@@ -635,8 +766,8 @@ const getStudentDashboard = async (studentId: string, range: DateRange = 'all') 
       cancelledBookings,
       totalPaid,
       totalUnpaid,
-      totalPaidCount: paidPayments.length,
-      totalUnpaidCount: unpaidPayments.length,
+      totalPaidCount: fullPaidPayments.length + paidInstallmentsFlat.length,
+      totalUnpaidCount: fullUnpaidPayments.length + pendingInstallmentsFlat.length,
     },
     activeBookings: activeBookingDetails,
     payments: {

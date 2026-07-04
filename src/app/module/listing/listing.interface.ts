@@ -1,4 +1,4 @@
-import { ListingType } from '../../../generated/enums';
+import { ListingType, AdvanceOption, GenderPreference } from '../../../generated';
 
 export interface ICreateListingPayload {
   title: string;
@@ -10,6 +10,10 @@ export interface ICreateListingPayload {
   city?: string;
   totalRooms?: number;
   totalSeats?: number;
+  studentDiscountPercent?: number;
+  advanceOption?: AdvanceOption;
+  genderPreference?: GenderPreference;
+  allowHalfMonthlyPay?: boolean;
 }
 
 export interface IUpdateListingPayload {
@@ -22,6 +26,10 @@ export interface IUpdateListingPayload {
   totalRooms?: number;
   totalSeats?: number;
   isAvailable?: boolean;
+  studentDiscountPercent?: number;
+  advanceOption?: AdvanceOption;
+  genderPreference?: GenderPreference;
+  allowHalfMonthlyPay?: boolean;
 }
 
 export interface IListingFilterPayload {
@@ -36,4 +44,6 @@ export interface IListingFilterPayload {
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+  genderPreference?: GenderPreference;
+  hasDiscount?: boolean;
 }

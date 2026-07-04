@@ -18,7 +18,7 @@ import {
 
 // ─── Register Student ─────────────────────────────────────────────────────────
 const registerStudent = async (payload: IRegisterStudentPayload) => {
-  const { name, email, password } = payload;
+  const { name, email, password, gender } = payload;
 
   const data = await auth.api.signUpEmail({
     body: { name, email, password },
@@ -27,6 +27,13 @@ const registerStudent = async (payload: IRegisterStudentPayload) => {
   if (!data.user) {
     throw new AppError(status.BAD_REQUEST, 'Failed to register student');
   }
+
+  if (gender) {
+      await prisma.user.update({
+        where: { id: data.user.id },
+        data: { gender },
+      });
+    }
 
   try {
     const accessToken = tokenUtils.getAccessToken({
@@ -105,7 +112,7 @@ const registerOwner = async (payload: IRegisterOwnerPayload) => {
 
 // ─── Register Tenant ──────────────────────────────────────────────────────────
 const registerTenant = async (payload: IRegisterTenantPayload) => {
-  const { name, email, password, tenantType } = payload;
+  const { name, email, password, tenantType,profession, gender } = payload;
 
   const data = await auth.api.signUpEmail({
     body: { name, email, password },
@@ -118,7 +125,7 @@ const registerTenant = async (payload: IRegisterTenantPayload) => {
   try {
     await prisma.user.update({
       where: { id: data.user.id },
-      data: { role: Role.TENANT, tenantType },
+      data: { role: Role.TENANT, tenantType, profession, gender},
     });
 
     const accessToken = tokenUtils.getAccessToken({

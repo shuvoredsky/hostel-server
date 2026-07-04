@@ -4,10 +4,11 @@ import AppError from '../../errorHelpers/AppError';
 import { prisma } from '../../lib/prisma';
 import { IRequestUser } from '../../interface/requestUser.interface';
 import { ICreateBookingPayload } from './booking.interface';
+import { calculatePricing, isGenderAllowed } from '../../utils/pricing';
 
 // ─── Create Booking (Student) ─────────────────────────────────────────────────
 const createBooking = async (payload: ICreateBookingPayload, user: IRequestUser) => {
-  const { listingId, message, moveInDate } = payload;
+  const { listingId, message, moveInDate, paymentPlan } = payload; // paymentPlan নতুন
 
   const listing = await prisma.listing.findFirst({
     where: {
@@ -22,12 +23,24 @@ const createBooking = async (payload: ICreateBookingPayload, user: IRequestUser)
     throw new AppError(status.NOT_FOUND, 'Listing not found or not available');
   }
 
-  
   if (listing.ownerId === user.userId) {
     throw new AppError(status.FORBIDDEN, 'You cannot book your own listing');
   }
 
-  
+  // ─── Gender Preference Check ─────────────────────────────────────────────
+  const requester = await prisma.user.findUnique({ where: { id: user.userId } });
+  if (!isGenderAllowed(listing.genderPreference, requester?.gender)) {
+    throw new AppError(
+      status.FORBIDDEN,
+      `এই listing শুধুমাত্র ${listing.genderPreference === 'BOYS' ? 'ছেলেদের' : 'মেয়েদের'} জন্য`,
+    );
+  }
+
+  // ─── Half Monthly চাইলে listing allow করে কিনা check ─────────────────────
+  if (paymentPlan === 'HALF_MONTHLY' && !listing.allowHalfMonthlyPay) {
+    throw new AppError(status.BAD_REQUEST, 'এই listing এ Half Monthly payment option নেই');
+  }
+
   const existingBooking = await prisma.booking.findFirst({
     where: {
       listingId,
@@ -47,14 +60,11 @@ const createBooking = async (payload: ICreateBookingPayload, user: IRequestUser)
       ownerId: listing.ownerId,
       message,
       moveInDate: moveInDate ? new Date(moveInDate) : null,
+      paymentPlan: paymentPlan || 'FULL',
     },
     include: {
-      listing: {
-        include: { images: true },
-      },
-      student: {
-        select: { id: true, name: true, email: true },
-      },
+      listing: { include: { images: true } },
+      student: { select: { id: true, name: true, email: true } },
     },
   });
 
@@ -165,17 +175,19 @@ const updateBookingStatus = async (
     },
   });
 
-  // ACCEPTED হলে Payment record তৈরি করো
+ // ACCEPTED হলে Payment record তৈরি করো
   if (newStatus === BookingStatus.ACCEPTED) {
-    const amount = booking.listing.price;
-    const commission = parseFloat((amount * 0.1).toFixed(2)); // 10%
+    const pricing = calculatePricing(booking.listing.price, booking.listing.studentDiscountPercent || 0);
 
     await prisma.payment.create({
       data: {
         bookingId: booking.id,
         studentId: booking.studentId,
-        amount,
-        commission,
+        amount: pricing.payableAmount,
+        commission: pricing.commission,
+        originalAmount: pricing.originalAmount,
+        discountPercent: pricing.discountPercent,
+        discountAmount: pricing.discountAmount,
       },
     });
   }

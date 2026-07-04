@@ -5,20 +5,20 @@ import { WishlistController } from './wishlist.controller';
 
 const router = Router();
 
-// Student
+// Student / Tenant
 router.post(
   '/toggle/:listingId',
-  checkAuth(Role.STUDENT),
+  checkAuth(Role.STUDENT, Role.TENANT),
   WishlistController.toggleWishlist,
 );
 router.get(
   '/my-wishlist',
-  checkAuth(Role.STUDENT),
+  checkAuth(Role.STUDENT, Role.TENANT),
   WishlistController.getMyWishlist,
 );
 router.get(
   '/status/:listingId',
-  checkAuth(Role.STUDENT),
+  checkAuth(Role.STUDENT, Role.TENANT),
   WishlistController.checkWishlistStatus,
 );
 

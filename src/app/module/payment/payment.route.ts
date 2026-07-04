@@ -9,25 +9,25 @@ const router = Router();
 // Student — payment initiate করবে
 router.post(
   '/initiate/:bookingId',
-  checkAuth(Role.STUDENT),
+  checkAuth(Role.STUDENT, Role.TENANT),
   PaymentController.initiatePayment,
 );
 
 // Student — নিজের payments দেখবে
 router.get(
   '/my-payments',
-  checkAuth(Role.STUDENT),
+  checkAuth(Role.STUDENT, Role.TENANT),
   PaymentController.getMyPayments,
 );
 
 
 router.get(
   '/invoice/:paymentId',
-  checkAuth(Role.OWNER, Role.STUDENT, Role.ADMIN),
+  checkAuth(Role.OWNER, Role.TENANT, Role.STUDENT, Role.ADMIN),
   InvoiceController.downloadInvoice,
 );
 
-// Owner — নিজের listing এর payments দেখবে
+// Owner — নিজের listing এর payments দেখবে  
 router.get(
   '/owner/all',
   checkAuth(Role.OWNER),

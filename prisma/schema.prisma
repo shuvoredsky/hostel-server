@@ -20,6 +20,22 @@ enum UserStatus {
   DELETED
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Profession {
+  SOFTWARE_ENGINEER
+  DOCTOR
+  TEACHER
+  BANKER
+  FREELANCER
+  BUSINESS
+  OTHERS
+}
+
 model User {
   id                  String               @id @default(cuid())
   name                String
@@ -30,6 +46,8 @@ model User {
   role                Role                 @default(STUDENT)
   status              UserStatus           @default(ACTIVE)
   needPasswordChange  Boolean              @default(false)
+  gender              Gender?
+  profession          Profession?
   studentVerification StudentVerification?
   isDeleted           Boolean              @default(false)
   deletedAt           DateTime?
@@ -143,6 +161,18 @@ enum ListingStatus {
   REJECTED
 }
 
+enum AdvanceOption {
+  NO_ADVANCE
+  ONE_MONTH
+  TWO_MONTH
+}
+
+enum GenderPreference {
+  BOYS
+  GIRLS
+  ANYONE
+}
+
 model Listing {
   id          String        @id @default(cuid())
   title       String
@@ -157,6 +187,11 @@ model Listing {
   totalSeats  Int?
   isAvailable Boolean       @default(true)
   isDeleted   Boolean       @default(false)
+
+  studentDiscountPercent Int?             @default(0) // 0, 5, 10, 15
+  advanceOption          AdvanceOption    @default(TWO_MONTH)
+  genderPreference       GenderPreference @default(ANYONE)
+  allowHalfMonthlyPay    Boolean          @default(false)
 
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id])
@@ -186,6 +221,11 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum PaymentPlan {
+  FULL
+  HALF_MONTHLY
+}
+
 model Booking {
   id         String        @id @default(cuid())
   listingId  String
@@ -201,6 +241,7 @@ model Booking {
   student      User          @relation("StudentBookings", fields: [studentId], references: [id])
   owner        User          @relation("OwnerBookings", fields: [ownerId], references: [id])
   payment      Payment?
+  paymentPlan  PaymentPlan   @default(FULL)
   user         User?         @relation(fields: [userId], references: [id])
   userId       String?
   extraCharges ExtraCharge[]
@@ -219,6 +260,28 @@ model Review {
   student User    @relation(fields: [studentId], references: [id])
 }
 
+enum InstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model PaymentInstallment {
+  id            String            @id @default(cuid())
+  paymentId     String
+  installmentNo Int
+  amount        Float
+  commission    Float             @default(0)
+  dueDate       DateTime?
+  status        InstallmentStatus @default(PENDING)
+  transactionId String?           @unique
+  paidAt        DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+}
+
 enum PaymentStatus {
   UNPAID
   PAID
@@ -227,18 +290,22 @@ enum PaymentStatus {
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  bookingId     String        @unique
-  studentId     String
-  amount        Float
-  commission    Float
-  currency      String        @default("BDT")
-  status        PaymentStatus @default(UNPAID)
-  transactionId String?       @unique
-  sslSessionKey String?
-  paidAt        DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String               @id @default(cuid())
+  bookingId       String               @unique
+  studentId       String
+  amount          Float
+  commission      Float
+  currency        String               @default("BDT")
+  status          PaymentStatus        @default(UNPAID)
+  originalAmount  Float?
+  discountPercent Int?                 @default(0)
+  discountAmount  Float?               @default(0)
+  transactionId   String?              @unique
+  sslSessionKey   String?
+  paidAt          DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  installments    PaymentInstallment[]
 
   booking Booking @relation(fields: [bookingId], references: [id])
   student User    @relation("StudentPayments", fields: [studentId], references: [id])

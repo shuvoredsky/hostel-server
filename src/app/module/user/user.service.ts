@@ -36,6 +36,9 @@ const getAllUsers = async (filters: {
         role: true,
         status: true,
         emailVerified: true,
+        studentVerification: {
+  select: { status: true },
+},
         image: true,
         isDeleted: true,
         createdAt: true,
@@ -90,6 +93,9 @@ const getSingleUser = async (userId: string) => {
           createdAt: true,
         },
       },
+      studentVerification: {
+  select: { status: true },
+},
       studentBookings: {
         select: {
           id: true,

@@ -1,10 +1,11 @@
-import { TenantType } from '../../../generated';
+import { TenantType, Gender, Profession } from '../../../generated';
 
 
 export interface IRegisterStudentPayload {
   name: string;
   email: string;
   password: string;
+  gender?: Gender;
 }
 
 export interface IRegisterOwnerPayload {
@@ -18,6 +19,8 @@ export interface IRegisterTenantPayload {
   email: string;
   password: string;
   tenantType: TenantType;
+  profession?: Profession;
+  gender?: Gender;
 }
 
 export interface ILoginUserPayload {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ListingType } from '../../../generated';
+import { ListingType, AdvanceOption, GenderPreference } from '../../../generated';
 
 const createListingZodSchema = z.object({
   title: z.string({ message: 'Title is required' }),
@@ -11,6 +11,10 @@ const createListingZodSchema = z.object({
   city: z.string().optional(),
   totalRooms: z.number().optional(),
   totalSeats: z.number().optional(),
+  studentDiscountPercent: z.number().min(0).max(100).optional(),
+  advanceOption: z.nativeEnum(AdvanceOption).optional(),
+  genderPreference: z.nativeEnum(GenderPreference).optional(),
+  allowHalfMonthlyPay: z.boolean().optional(),
 });
 
 const updateListingZodSchema = z.object({
@@ -23,6 +27,10 @@ const updateListingZodSchema = z.object({
   totalRooms: z.number().optional(),
   totalSeats: z.number().optional(),
   isAvailable: z.boolean().optional(),
+  studentDiscountPercent: z.number().min(0).max(100).optional(),
+  advanceOption: z.nativeEnum(AdvanceOption).optional(),
+  genderPreference: z.nativeEnum(GenderPreference).optional(),
+  allowHalfMonthlyPay: z.boolean().optional(),
 });
 
 export const ListingValidation = {

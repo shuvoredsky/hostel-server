@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import AppError from '../../errorHelpers/AppError';
 import status from 'http-status';
+import { calculateInstallments } from '../../utils/pricing';
 
 const generateInvoicePDF = async (
   paymentId: string,

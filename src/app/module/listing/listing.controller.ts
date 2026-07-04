@@ -10,12 +10,16 @@ const createListing = catchAsync(async (req: Request, res: Response) => {
   const images = (req.files as Express.Multer.File[])?.map((file) => file.path) || [];
   const user = (req as any).user;
 
-  const payload = {
-    ...body,
-    price: Number(body.price),
-    totalRooms: body.totalRooms ? Number(body.totalRooms) : undefined,
-    totalSeats: body.totalSeats ? Number(body.totalSeats) : undefined,
-  };
+const payload = {
+  ...body,
+  price: Number(body.price),
+  totalRooms: body.totalRooms ? Number(body.totalRooms) : undefined,
+  totalSeats: body.totalSeats ? Number(body.totalSeats) : undefined,
+  studentDiscountPercent: body.studentDiscountPercent
+    ? Number(body.studentDiscountPercent)
+    : undefined,
+  allowHalfMonthlyPay: body.allowHalfMonthlyPay === 'true',    
+};
 
   const result = await ListingService.createListing(payload, images, user);
 
@@ -44,6 +48,8 @@ const getAllListings = catchAsync(async (req: Request, res: Response) => {
     page: req.query.page ? Number(req.query.page) : undefined,
     limit: req.query.limit ? Number(req.query.limit) : undefined,
     studentId: user?.userId,
+    genderPreference: req.query.genderPreference as any,
+  hasDiscount: req.query.hasDiscount === 'true',             
   };
 
   const result = await ListingService.getAllListings(filters);

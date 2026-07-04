@@ -13,16 +13,16 @@ router.get('/owner/requests', checkAuth(Role.OWNER), BookingController.getBookin
 router.patch('/owner/:id/status', checkAuth(Role.OWNER), BookingController.updateBookingStatus);
 
 // Student
-router.post('/', checkAuth(Role.STUDENT), BookingController.createBooking);
+router.post('/', checkAuth(Role.STUDENT, Role.TENANT), BookingController.createBooking);
 router.post(
   '/:id/extra-charge',
   checkAuth(Role.OWNER),
   BookingController.addExtraCharge,
 );
-router.get('/my-bookings', checkAuth(Role.STUDENT), BookingController.getMyBookings);
-router.patch('/cancel/:id', checkAuth(Role.STUDENT), BookingController.cancelBooking);
+router.get('/my-bookings', checkAuth(Role.STUDENT, Role.TENANT), BookingController.getMyBookings);
+router.patch('/cancel/:id', checkAuth(Role.STUDENT, Role.TENANT), BookingController.cancelBooking);
 
 // Common (Student + Owner)
-router.get('/:id', checkAuth(Role.STUDENT, Role.OWNER, Role.ADMIN), BookingController.getSingleBooking);
+router.get('/:id', checkAuth(Role.STUDENT,Role.TENANT ,Role.OWNER, Role.ADMIN), BookingController.getSingleBooking);
 
 export const BookingRoutes = router;
