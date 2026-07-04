@@ -53,6 +53,17 @@ const createBooking = async (payload: ICreateBookingPayload, user: IRequestUser)
     throw new AppError(status.BAD_REQUEST, 'You already have an active booking for this listing');
   }
 
+  const alreadyConfirmed = await prisma.booking.findFirst({
+  where: {
+    listingId,
+    status: BookingStatus.CONFIRMED,
+  },
+});
+
+if (alreadyConfirmed) {
+  throw new AppError(status.BAD_REQUEST, 'এই listing টি ইতিমধ্যে বুক হয়ে গেছে এবং আর available নেই');
+}
+
   const booking = await prisma.booking.create({
     data: {
       listingId,

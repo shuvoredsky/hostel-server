@@ -1,28 +1,28 @@
-import { Router } from 'express';
-import { Role } from '../../../generated';
-import { checkAuth } from '../../middleware/checkAuth';
-import { BookingController } from './booking.controller';
+  import { Router } from 'express';
+  import { Role } from '../../../generated';
+  import { checkAuth } from '../../middleware/checkAuth';
+  import { BookingController } from './booking.controller';
 
-const router = Router();
+  const router = Router();
 
-// Admin
-router.get('/admin/all', checkAuth(Role.ADMIN), BookingController.getAllBookings);
+  // Admin
+  router.get('/admin/all', checkAuth(Role.ADMIN), BookingController.getAllBookings);
 
-// Owner
-router.get('/owner/requests', checkAuth(Role.OWNER), BookingController.getBookingRequests);
-router.patch('/owner/:id/status', checkAuth(Role.OWNER), BookingController.updateBookingStatus);
+  // Owner
+  router.get('/owner/requests', checkAuth(Role.OWNER), BookingController.getBookingRequests);
+  router.patch('/owner/:id/status', checkAuth(Role.OWNER), BookingController.updateBookingStatus);
 
-// Student
-router.post('/', checkAuth(Role.STUDENT, Role.TENANT), BookingController.createBooking);
-router.post(
-  '/:id/extra-charge',
-  checkAuth(Role.OWNER),
-  BookingController.addExtraCharge,
-);
-router.get('/my-bookings', checkAuth(Role.STUDENT, Role.TENANT), BookingController.getMyBookings);
-router.patch('/cancel/:id', checkAuth(Role.STUDENT, Role.TENANT), BookingController.cancelBooking);
+  // Student
+  router.post('/', checkAuth(Role.STUDENT, Role.TENANT), BookingController.createBooking);
+  router.post(
+    '/:id/extra-charge',
+    checkAuth(Role.OWNER),
+    BookingController.addExtraCharge,
+  );
+  router.get('/my-bookings', checkAuth(Role.STUDENT, Role.TENANT), BookingController.getMyBookings);
+  router.patch('/cancel/:id', checkAuth(Role.STUDENT, Role.TENANT), BookingController.cancelBooking);
 
-// Common (Student + Owner)
-router.get('/:id', checkAuth(Role.STUDENT,Role.TENANT ,Role.OWNER, Role.ADMIN), BookingController.getSingleBooking);
+  // Common (Student + Owner)
+  router.get('/:id', checkAuth(Role.STUDENT,Role.TENANT ,Role.OWNER, Role.ADMIN), BookingController.getSingleBooking);
 
-export const BookingRoutes = router;
+  export const BookingRoutes = router;

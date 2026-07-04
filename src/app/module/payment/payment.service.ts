@@ -151,34 +151,37 @@ const paymentSuccess = async (transactionId: string) => {
     include: { payment: { include: { booking: true } } },
   });
 
-  if (installment) {
-    // Mark this installment as paid. If no pending installments remain,
-    // mark parent payment as PAID and confirm the booking.
-    await prisma.$transaction(async (tx) => {
-      await tx.paymentInstallment.update({
-        where: { id: installment.id },
+if (installment) {
+  await prisma.$transaction(async (tx) => {
+    await tx.paymentInstallment.update({
+      where: { id: installment.id },
+      data: { status: 'PAID', paidAt: new Date() },
+    });
+
+    const pending = await tx.paymentInstallment.findFirst({
+      where: { paymentId: installment.paymentId, status: 'PENDING' },
+    });
+
+    if (!pending) {
+      await tx.payment.update({
+        where: { id: installment.paymentId },
         data: { status: 'PAID', paidAt: new Date() },
       });
 
-      const pending = await tx.paymentInstallment.findFirst({
-        where: { paymentId: installment.paymentId, status: 'PENDING' },
+      await tx.booking.update({
+        where: { id: installment.payment.bookingId },
+        data: { status: 'CONFIRMED' },
       });
 
-      if (!pending) {
-        await tx.payment.update({
-          where: { id: installment.paymentId },
-          data: { status: 'PAID', paidAt: new Date() },
-        });
+      await tx.listing.update({
+        where: { id: installment.payment.booking.listingId },  // ← ফিক্স
+        data: { isAvailable: false },
+      });
+    }
+  });
 
-        await tx.booking.update({
-          where: { id: installment.payment.bookingId },
-          data: { status: 'CONFIRMED' },
-        });
-      }
-    });
-
-    return { message: 'Installment payment successful' };
-  }
+  return { message: 'Installment payment successful' };
+}
 
   // Otherwise treat as a full payment transaction
   const payment = await prisma.payment.findFirst({
@@ -204,6 +207,12 @@ const paymentSuccess = async (transactionId: string) => {
       where: { id: payment.bookingId },
       data: { status: 'CONFIRMED' },
     });
+
+    await tx.listing.update({
+    where: { id: payment.booking.listingId },
+    data: { isAvailable: false },
+  });
+
   });
 
   return { message: 'Payment successful' };
