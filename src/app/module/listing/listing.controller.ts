@@ -2,7 +2,71 @@ import { Request, Response } from 'express';
 import status from 'http-status';
 import { catchAsync } from '../../shared/catchAsync';
 import { sendResponse } from '../../shared/sendResponse';
+import { ICreateListingPayload, IUpdateListingPayload } from './listing.interface';
 import { ListingService } from './listing.service';
+
+const parseOptionalNumber = (value: unknown) => {
+  if (value === undefined || value === null || value === '') return undefined;
+  return Number(value);
+};
+
+const parseOptionalBoolean = (value: unknown) => {
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value === 'boolean') return value;
+  return value === 'true';
+};
+
+const parseOptionalString = (value: unknown) => {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+};
+
+const parseAmenities = (value: unknown) => {
+  if (value === undefined || value === null || value === '') return undefined;
+
+  const normalizeArray = (items: unknown[]) =>
+    items
+      .flatMap((item) => parseAmenities(item) || [])
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+
+  if (Array.isArray(value)) return normalizeArray(value);
+
+  if (typeof value !== 'string') return undefined;
+
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) return normalizeArray(parsed);
+  } catch {
+    // Fall back to comma-separated or single form field values.
+  }
+
+  return trimmed.includes(',')
+    ? trimmed.split(',').map((item) => item.trim()).filter(Boolean)
+    : [trimmed];
+};
+
+const normalizeListingPayload = (body: Record<string, unknown>) => ({
+  ...body,
+  title: body.title as string,
+  description: body.description as string,
+  type: body.type as string,
+  address: body.address as string,
+  area: body.area as string,
+  price: parseOptionalNumber(body.price),
+  totalRooms: parseOptionalNumber(body.totalRooms),
+  totalSeats: parseOptionalNumber(body.totalSeats),
+  studentDiscountPercent: parseOptionalNumber(body.studentDiscountPercent),
+  allowHalfMonthlyPay: parseOptionalBoolean(body.allowHalfMonthlyPay),
+  isAvailable: parseOptionalBoolean(body.isAvailable),
+  amenities: parseAmenities(body.amenities),
+  gasType: parseOptionalString(body.gasType),
+  nearbyType: parseOptionalString(body.nearbyType),
+  nearbyName: parseOptionalString(body.nearbyName),
+});
 
 // ─── Create Listing ───────────────────────────────────────────────────────────
 const createListing = catchAsync(async (req: Request, res: Response) => {
@@ -10,16 +74,7 @@ const createListing = catchAsync(async (req: Request, res: Response) => {
   const images = (req.files as Express.Multer.File[])?.map((file) => file.path) || [];
   const user = (req as any).user;
 
-const payload = {
-  ...body,
-  price: Number(body.price),
-  totalRooms: body.totalRooms ? Number(body.totalRooms) : undefined,
-  totalSeats: body.totalSeats ? Number(body.totalSeats) : undefined,
-  studentDiscountPercent: body.studentDiscountPercent
-    ? Number(body.studentDiscountPercent)
-    : undefined,
-  allowHalfMonthlyPay: body.allowHalfMonthlyPay === 'true',    
-};
+const payload = normalizeListingPayload(body) as ICreateListingPayload;
 
   const result = await ListingService.createListing(payload, images, user);
 
@@ -93,7 +148,8 @@ const getMyListings = catchAsync(async (req: Request, res: Response) => {
 const updateListing = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const user = (req as any).user;
-  const result = await ListingService.updateListing(id, req.body, user);
+  const payload = normalizeListingPayload(req.body) as IUpdateListingPayload;
+  const result = await ListingService.updateListing(id, payload, user);
 
   sendResponse(res, {
     httpStatusCode: status.OK,

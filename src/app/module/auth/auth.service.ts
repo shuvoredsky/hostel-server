@@ -15,6 +15,7 @@ import {
   IRegisterStudentPayload,
   IRegisterTenantPayload,
 } from './auth.interface';
+import { AuthValidation } from './auth.validation';
 
 // ─── Register Student ─────────────────────────────────────────────────────────
 const registerStudent = async (payload: IRegisterStudentPayload) => {
@@ -65,7 +66,16 @@ const registerStudent = async (payload: IRegisterStudentPayload) => {
 
 // ─── Register Owner ───────────────────────────────────────────────────────────
 const registerOwner = async (payload: IRegisterOwnerPayload) => {
-  const { name, email, password } = payload;
+  const parsedPayload = AuthValidation.registerOwnerZodSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      parsedPayload.error.issues[0]?.message || 'Invalid owner registration payload',
+    );
+  }
+
+  const { name, email, password, whatsappNumber } = parsedPayload.data;
 
   const data = await auth.api.signUpEmail({
     body: { name, email, password },
@@ -79,7 +89,7 @@ const registerOwner = async (payload: IRegisterOwnerPayload) => {
     // Owner এর role update করো
     await prisma.user.update({
       where: { id: data.user.id },
-      data: { role: Role.OWNER },
+      data: { role: Role.OWNER, whatsappNumber },
     });
 
     const accessToken = tokenUtils.getAccessToken({

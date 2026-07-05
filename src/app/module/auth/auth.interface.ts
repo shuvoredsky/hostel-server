@@ -12,6 +12,7 @@ export interface IRegisterOwnerPayload {
   name: string;
   email: string;
   password: string;
+  whatsappNumber: string;
 }
 
 export interface IRegisterTenantPayload {

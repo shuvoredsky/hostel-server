@@ -1,4 +1,11 @@
-import { ListingType, AdvanceOption, GenderPreference } from '../../../generated';
+import {
+  ListingType,
+  AdvanceOption,
+  GenderPreference,
+  Amenity,
+  GasType,
+  NearbyLandmarkType,
+} from '../../../generated';
 
 export interface ICreateListingPayload {
   title: string;
@@ -14,6 +21,10 @@ export interface ICreateListingPayload {
   advanceOption?: AdvanceOption;
   genderPreference?: GenderPreference;
   allowHalfMonthlyPay?: boolean;
+  amenities?: Amenity[];
+  gasType?: GasType;
+  nearbyType?: NearbyLandmarkType;
+  nearbyName?: string;
 }
 
 export interface IUpdateListingPayload {
@@ -30,6 +41,10 @@ export interface IUpdateListingPayload {
   advanceOption?: AdvanceOption;
   genderPreference?: GenderPreference;
   allowHalfMonthlyPay?: boolean;
+  amenities?: Amenity[];
+  gasType?: GasType;
+  nearbyType?: NearbyLandmarkType;
+  nearbyName?: string;
 }
 
 export interface IListingFilterPayload {

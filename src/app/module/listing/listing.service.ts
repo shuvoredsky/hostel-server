@@ -8,6 +8,33 @@ import {
   IListingFilterPayload,
   IUpdateListingPayload,
 } from './listing.interface';
+import { ListingValidation } from './listing.validation';
+
+const validateCreateListingPayload = (payload: ICreateListingPayload) => {
+  const parsedPayload = ListingValidation.createListingZodSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      parsedPayload.error.issues[0]?.message || 'Invalid listing payload',
+    );
+  }
+
+  return parsedPayload.data;
+};
+
+const validateUpdateListingPayload = (payload: IUpdateListingPayload) => {
+  const parsedPayload = ListingValidation.updateListingZodSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      parsedPayload.error.issues[0]?.message || 'Invalid listing payload',
+    );
+  }
+
+  return parsedPayload.data;
+};
 
 // ─── Create Listing (Owner) ───────────────────────────────────────────────────
 const createListing = async (
@@ -15,9 +42,11 @@ const createListing = async (
   images: string[],
   user: IRequestUser,
 ) => {
+  const validPayload = validateCreateListingPayload(payload);
+
   const listing = await prisma.listing.create({
     data: {
-      ...payload,
+      ...validPayload,
       ownerId: user.userId,
       images: {
         create: images.map((url) => ({ url })),
@@ -157,7 +186,7 @@ const getSingleListing = async (id: string) => {
     include: {
       images: true,
       owner: {
-        select: { id: true, name: true, email: true },
+        select: { id: true, name: true, email: true, whatsappNumber: true },
       },
       reviews: {
         include: {
@@ -198,6 +227,8 @@ const updateListing = async (
   payload: IUpdateListingPayload,
   user: IRequestUser,
 ) => {
+  const validPayload = validateUpdateListingPayload(payload);
+
   const listing = await prisma.listing.findFirst({
     where: { id, isDeleted: false },
   });
@@ -212,7 +243,7 @@ const updateListing = async (
 
   const updated = await prisma.listing.update({
     where: { id },
-    data: payload,
+    data: validPayload,
     include: { images: true },
   });
 

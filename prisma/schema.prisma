@@ -42,6 +42,7 @@ model User {
   email               String               @unique
   emailVerified       Boolean              @default(false)
   image               String?
+  whatsappNumber      String?
   tenantType          TenantType?
   role                Role                 @default(STUDENT)
   status              UserStatus           @default(ACTIVE)
@@ -173,6 +174,28 @@ enum GenderPreference {
   ANYONE
 }
 
+enum Amenity {
+  WIFI
+  FILTERED_WATER
+  AC
+  LIFT
+  SECURITY_24_7
+  CCTV
+  PARKING
+}
+
+enum GasType {
+  CYLINDER
+  SUPPLY
+  NOT_AVAILABLE
+}
+
+enum NearbyLandmarkType {
+  UNIVERSITY
+  METRO_STATION
+  BUS_STOP
+}
+
 model Listing {
   id          String        @id @default(cuid())
   title       String
@@ -192,6 +215,10 @@ model Listing {
   advanceOption          AdvanceOption    @default(TWO_MONTH)
   genderPreference       GenderPreference @default(ANYONE)
   allowHalfMonthlyPay    Boolean          @default(false)
+  amenities              Amenity[]        @default([])
+  gasType                GasType?         @default(NOT_AVAILABLE)
+  nearbyType             NearbyLandmarkType?
+  nearbyName             String?
 
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id])
