@@ -11,7 +11,7 @@ generated/
 
 .DS_Store
 
-dist
+dist/
 
 # local env files
 .env.local

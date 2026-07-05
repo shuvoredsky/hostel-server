@@ -5,6 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -211,12 +212,12 @@ model Listing {
   isAvailable Boolean       @default(true)
   isDeleted   Boolean       @default(false)
 
-  studentDiscountPercent Int?             @default(0) // 0, 5, 10, 15
-  advanceOption          AdvanceOption    @default(TWO_MONTH)
-  genderPreference       GenderPreference @default(ANYONE)
-  allowHalfMonthlyPay    Boolean          @default(false)
-  amenities              Amenity[]        @default([])
-  gasType                GasType?         @default(NOT_AVAILABLE)
+  studentDiscountPercent Int?                @default(0) // 0, 5, 10, 15
+  advanceOption          AdvanceOption       @default(TWO_MONTH)
+  genderPreference       GenderPreference    @default(ANYONE)
+  allowHalfMonthlyPay    Boolean             @default(false)
+  amenities              Amenity[]           @default([])
+  gasType                GasType?            @default(NOT_AVAILABLE)
   nearbyType             NearbyLandmarkType?
   nearbyName             String?
 
