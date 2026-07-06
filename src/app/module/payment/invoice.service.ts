@@ -30,6 +30,7 @@ const generateInvoicePDF = async (
           extraCharges: true,
         },
       },
+      installments: true,
     },
   });
 
@@ -46,7 +47,12 @@ const generateInvoicePDF = async (
     throw new AppError(status.FORBIDDEN, 'You are not authorized to access this invoice');
   }
 
-  if (payment.status !== 'PAID') {
+  // Partial (half-monthly installment) paid hole ও invoice allow koro
+  const paidInstallments = payment.installments.filter((i) => i.status === 'PAID');
+  const isFullyPaid = payment.status === 'PAID';
+  const hasAnyPayment = isFullyPaid || paidInstallments.length > 0;
+
+  if (!hasAnyPayment) {
     throw new AppError(status.BAD_REQUEST, 'Invoice only available for paid payments');
   }
 
@@ -54,14 +60,32 @@ const generateInvoicePDF = async (
   const siteSettings = await prisma.siteSettings.findFirst();
   const logoUrl = siteSettings?.logoUrl || null;
 
-  // Calculations
+  // Calculations — partial paid hole shudhu shei paid portion dhoro
   const extraTotal = payment.booking.extraCharges.reduce((sum, e) => sum + e.amount, 0);
-  const grandTotal = payment.amount + extraTotal;
-  const netOwnerAmount = grandTotal - payment.commission;
+
+  const paidAmount = isFullyPaid
+    ? payment.amount
+    : paidInstallments.reduce((sum, i) => sum + i.amount, 0);
+
+  const paidCommission = isFullyPaid
+    ? payment.commission
+    : paidInstallments.reduce((sum, i) => sum + i.commission, 0);
+
+  const grandTotal = paidAmount + extraTotal;
+  const netOwnerAmount = grandTotal - paidCommission;
 
   // Invoice meta
   const invoiceNumber = `INV-${payment.transactionId?.slice(-8).toUpperCase()}`;
-  const invoiceDate = new Date(payment.paidAt!).toLocaleDateString('en-GB', {
+
+  const latestPaidDate =
+    payment.paidAt ??
+    paidInstallments
+      .map((i) => i.paidAt)
+      .filter(Boolean)
+      .sort((a, b) => new Date(b!).getTime() - new Date(a!).getTime())[0] ??
+    new Date();
+
+  const invoiceDate = new Date(latestPaidDate).toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -108,11 +132,16 @@ const generateInvoicePDF = async (
   const roleBadgeColor = isAdmin ? '#dbeafe' : isOwner ? '#fef3c7' : '#d1fae5';
   const roleBadgeTextColor = isAdmin ? '#1e40af' : isOwner ? orangeColor : greenColor;
 
-  doc.rect(430, 130, 115, 28).fill('#d1fae5');
-  doc.fillColor(greenColor).fontSize(12).font('Helvetica-Bold').text('PAID', 465, 138);
+  // Paid / Partially Paid badge
+  const badgeColor = isFullyPaid ? '#d1fae5' : '#fef3c7';
+  const badgeTextColor = isFullyPaid ? greenColor : orangeColor;
+  const badgeLabel = isFullyPaid ? 'PAID' : 'PARTIALLY PAID';
 
-  doc.rect(310, 130, 110, 28).fill(roleBadgeColor);
-  doc.fillColor(roleBadgeTextColor).fontSize(10).font('Helvetica-Bold').text(roleBadgeText, 315, 138);
+  doc.rect(400, 130, 145, 28).fill(badgeColor);
+  doc.fillColor(badgeTextColor).fontSize(11).font('Helvetica-Bold').text(badgeLabel, 415, 138);
+
+  doc.rect(280, 130, 110, 28).fill(roleBadgeColor);
+  doc.fillColor(roleBadgeTextColor).fontSize(10).font('Helvetica-Bold').text(roleBadgeText, 285, 138);
 
   // ─── From / To ───────────────────────────────────────────────────────────
   doc.fillColor(grayColor).fontSize(9).font('Helvetica-Bold').text('FROM', 50, 175);
@@ -154,9 +183,9 @@ const generateInvoicePDF = async (
 
   doc.rect(50, yPos, 495, 30).fill(yPos % 60 === 0 ? lightGray : '#ffffff');
   doc.fillColor(darkColor).fontSize(10).font('Helvetica')
-    .text('Monthly Rent', 65, yPos + 10)
+    .text(isFullyPaid ? 'Monthly Rent' : 'Rent (Paid Installments)', 65, yPos + 10)
     .text('Base Rent', 300, yPos + 10)
-    .text(`${payment.amount.toLocaleString()} BDT`, 420, yPos + 10);
+    .text(`${paidAmount.toLocaleString()} BDT`, 420, yPos + 10);
   yPos += 30;
 
   payment.booking.extraCharges.forEach((charge) => {
@@ -174,7 +203,7 @@ const generateInvoicePDF = async (
   // ─── Summary (Role-based) ─────────────────────────────────────────────────
   doc.fillColor(grayColor).fontSize(10).font('Helvetica')
     .text('Subtotal:', 380, yPos)
-    .text(`${payment.amount.toLocaleString()} BDT`, 470, yPos, { align: 'right' });
+    .text(`${paidAmount.toLocaleString()} BDT`, 470, yPos, { align: 'right' });
   yPos += 20;
 
   if (extraTotal > 0) {
@@ -188,7 +217,7 @@ const generateInvoicePDF = async (
   if (isOwner && !isAdmin) {
     doc.fillColor('#b45309').fontSize(10).font('Helvetica')
       .text('Platform Commission (10%):', 340, yPos)
-      .text(`- ${payment.commission.toLocaleString()} BDT`, 470, yPos, { align: 'right' });
+      .text(`- ${paidCommission.toLocaleString()} BDT`, 470, yPos, { align: 'right' });
     yPos += 10;
 
     doc.moveTo(370, yPos).lineTo(545, yPos).strokeColor(borderColor).lineWidth(0.5).stroke();
@@ -205,7 +234,7 @@ const generateInvoicePDF = async (
   else if (isAdmin) {
     doc.fillColor('#1e40af').fontSize(10).font('Helvetica')
       .text('Platform Commission (10%):', 340, yPos)
-      .text(`${payment.commission.toLocaleString()} BDT`, 470, yPos, { align: 'right' });
+      .text(`${paidCommission.toLocaleString()} BDT`, 470, yPos, { align: 'right' });
     yPos += 10;
 
     doc.moveTo(370, yPos).lineTo(545, yPos).strokeColor(borderColor).lineWidth(0.5).stroke();
@@ -225,7 +254,7 @@ const generateInvoicePDF = async (
 
     doc.rect(370, yPos, 175, 35).fill(primaryColor);
     doc.fillColor('#ffffff').fontSize(13).font('Helvetica-Bold')
-      .text('Total Paid:', 385, yPos + 10)
+      .text(isFullyPaid ? 'Total Paid:' : 'Total Paid So Far:', 385, yPos + 10)
       .text(`${grandTotal.toLocaleString()} BDT`, 390, yPos + 10, { align: 'right', width: 140 });
     yPos += 55;
   }
@@ -240,7 +269,7 @@ const generateInvoicePDF = async (
     doc.fillColor(greenColor).fontSize(11).font('Helvetica-Bold')
       .text(`${netOwnerAmount.toLocaleString()} BDT`, 175, yPos + 25);
     doc.fillColor('#1e40af').fontSize(11).font('Helvetica-Bold')
-      .text(`${payment.commission.toLocaleString()} BDT`, 420, yPos + 25);
+      .text(`${paidCommission.toLocaleString()} BDT`, 420, yPos + 25);
     yPos += 70;
   }
 

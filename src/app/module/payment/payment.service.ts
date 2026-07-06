@@ -334,28 +334,30 @@ const getOwnerPayments = async (user: IRequestUser) => {
   ]);
 
   // দুইটাকে একই shape এ normalize করে merge করো, যাতে frontend একই structure পায়
-  const normalizedInstallments = installmentPayments.map((i) => ({
-    id: i.id,
-    amount: i.amount,
-    commission: i.commission,
-    status: i.status,
-    paidAt: i.paidAt,
-    isInstallment: true,
-    installmentNo: i.installmentNo,
-    student: i.payment.student,
-    booking: i.payment.booking,
-  }));
+const normalizedInstallments = installmentPayments.map((i) => ({
+  id: i.id,
+  paymentId: i.paymentId,
+  amount: i.amount,
+  commission: i.commission,
+  status: i.status,
+  paidAt: i.paidAt,
+  isInstallment: true,
+  installmentNo: i.installmentNo,
+  student: i.payment.student,
+  booking: i.payment.booking,
+}));
 
-  const normalizedFull = fullPayments.map((p) => ({
-    id: p.id,
-    amount: p.amount,
-    commission: p.commission,
-    status: p.status,
-    paidAt: p.paidAt,
-    isInstallment: false,
-    student: p.student,
-    booking: p.booking,
-  }));
+const normalizedFull = fullPayments.map((p) => ({
+  id: p.id,
+  paymentId: p.id,
+  amount: p.amount,
+  commission: p.commission,
+  status: p.status,
+  paidAt: p.paidAt,
+  isInstallment: false,
+  student: p.student,
+  booking: p.booking,
+}));
 
   return [...normalizedFull, ...normalizedInstallments].sort(
     (a, b) => new Date(b.paidAt!).getTime() - new Date(a.paidAt!).getTime(),
