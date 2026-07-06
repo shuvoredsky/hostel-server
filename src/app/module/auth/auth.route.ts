@@ -5,7 +5,7 @@ import { AuthController } from './auth.controller';
 
 const router = Router();
 
-const ALL_ROLES = [Role.ADMIN, Role.OWNER, Role.STUDENT];
+const ALL_ROLES = [Role.ADMIN, Role.OWNER, Role.STUDENT, Role.TENANT];
 
 // Public routes
 router.post('/register/student', AuthController.registerStudent);
