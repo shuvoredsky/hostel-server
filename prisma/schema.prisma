@@ -172,6 +172,7 @@ enum AdvanceOption {
 enum GenderPreference {
   BOYS
   GIRLS
+  FAMILY
   ANYONE
 }
 
@@ -211,6 +212,7 @@ model Listing {
   totalSeats  Int?
   isAvailable Boolean       @default(true)
   isDeleted   Boolean       @default(false)
+  googleMapsLink String?
 
   studentDiscountPercent Int?                @default(0) // 0, 5, 10, 15
   advanceOption          AdvanceOption       @default(TWO_MONTH)

@@ -27,13 +27,22 @@ const createBooking = async (payload: ICreateBookingPayload, user: IRequestUser)
     throw new AppError(status.FORBIDDEN, 'You cannot book your own listing');
   }
 
-  // ─── Gender Preference Check ─────────────────────────────────────────────
+  // ─── Gender/Role Preference Check ─────────────────────────────────────────────
   const requester = await prisma.user.findUnique({ where: { id: user.userId } });
-  if (!isGenderAllowed(listing.genderPreference, requester?.gender)) {
-    throw new AppError(
-      status.FORBIDDEN,
-      `এই listing শুধুমাত্র ${listing.genderPreference === 'BOYS' ? 'ছেলেদের' : 'মেয়েদের'} জন্য`,
-    );
+  if (listing.genderPreference === 'FAMILY') {
+    if (requester?.role !== 'TENANT') {
+      throw new AppError(
+        status.FORBIDDEN,
+        'This listing is only available for tenant bookings',
+      );
+    }
+  } else {
+    if (!isGenderAllowed(listing.genderPreference as any, requester?.gender)) {
+      throw new AppError(
+        status.FORBIDDEN,
+        `এই listing শুধুমাত্র ${listing.genderPreference === 'BOYS' ? 'ছেলেদের' : 'মেয়েদের'} জন্য`,
+      );
+    }
   }
 
   // ─── Half Monthly চাইলে listing allow করে কিনা check ─────────────────────

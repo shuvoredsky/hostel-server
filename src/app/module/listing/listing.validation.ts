@@ -40,6 +40,23 @@ const createListingZodSchema = z
     gasType: z.nativeEnum(GasType).optional(),
     nearbyType: z.nativeEnum(NearbyLandmarkType).optional(),
     nearbyName: z.string().optional(),
+    googleMapsLink: z
+      .string()
+      .url({ message: 'Invalid URL format' })
+      .refine(
+        (val) => {
+          return (
+            val.includes('google.com/maps') ||
+            val.includes('goo.gl') ||
+            val.includes('maps.app.goo.gl')
+          );
+        },
+        {
+          message: 'Please enter a valid Google Maps link (google.com/maps, goo.gl, or maps.app.goo.gl)',
+        },
+      )
+      .optional()
+      .or(z.literal('')),
   })
   .superRefine(requireNearbyNameWhenTypeExists);
 
@@ -62,6 +79,23 @@ const updateListingZodSchema = z
     gasType: z.nativeEnum(GasType).optional(),
     nearbyType: z.nativeEnum(NearbyLandmarkType).optional(),
     nearbyName: z.string().optional(),
+    googleMapsLink: z
+      .string()
+      .url({ message: 'Invalid URL format' })
+      .refine(
+        (val) => {
+          return (
+            val.includes('google.com/maps') ||
+            val.includes('goo.gl') ||
+            val.includes('maps.app.goo.gl')
+          );
+        },
+        {
+          message: 'Please enter a valid Google Maps link (google.com/maps, goo.gl, or maps.app.goo.gl)',
+        },
+      )
+      .optional()
+      .or(z.literal('')),
   })
   .superRefine(requireNearbyNameWhenTypeExists);
 

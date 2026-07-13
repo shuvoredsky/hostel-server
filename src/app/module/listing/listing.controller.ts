@@ -66,6 +66,7 @@ const normalizeListingPayload = (body: Record<string, unknown>) => ({
   gasType: parseOptionalString(body.gasType),
   nearbyType: parseOptionalString(body.nearbyType),
   nearbyName: parseOptionalString(body.nearbyName),
+  googleMapsLink: parseOptionalString(body.googleMapsLink),
 });
 
 // ─── Create Listing ───────────────────────────────────────────────────────────

@@ -25,6 +25,7 @@ export interface ICreateListingPayload {
   gasType?: GasType;
   nearbyType?: NearbyLandmarkType;
   nearbyName?: string;
+  googleMapsLink?: string;
 }
 
 export interface IUpdateListingPayload {
@@ -45,6 +46,7 @@ export interface IUpdateListingPayload {
   gasType?: GasType;
   nearbyType?: NearbyLandmarkType;
   nearbyName?: string;
+  googleMapsLink?: string;
 }
 
 export interface IListingFilterPayload {
