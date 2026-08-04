@@ -86,9 +86,63 @@ const getUnreadCount = async (userId: string) => {
   return count;
 };
 
+// ─── Message পাঠানো ────────────────────────────────────────────────────────
+const sendMessage = async (
+  conversationId: string,
+  senderId: string,
+  content: string,
+) => {
+  const conversation = await prisma.conversation.findFirst({
+    where: {
+      id: conversationId,
+      OR: [{ studentId: senderId }, { ownerId: senderId }],
+    },
+  });
+
+  if (!conversation) {
+    throw new AppError(status.FORBIDDEN, 'Access denied');
+  }
+
+  const message = await prisma.message.create({
+    data: {
+      conversationId,
+      senderId,
+      content,
+    },
+    include: {
+      sender: {
+        select: { id: true, name: true, image: true },
+      },
+    },
+  });
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { updatedAt: new Date() },
+  });
+
+  return message;
+};
+
+// ─── Mark read ───────────────────────────────────────────────────────────
+const markRead = async (conversationId: string, userId: string) => {
+  const result = await prisma.message.updateMany({
+    where: {
+      conversationId,
+      senderId: { not: userId },
+      isRead: false,
+    },
+    data: { isRead: true },
+  });
+
+  return result;
+};
+
 export const ChatService = {
   getOrCreateConversation,
   getMyConversations,
   getMessages,
   getUnreadCount,
+  sendMessage,
+  markRead,
 };

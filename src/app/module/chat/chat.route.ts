@@ -5,6 +5,8 @@ import { ChatController } from './chat.controller';
 
 const router = Router();
 
+const ALL_ROLES = [Role.STUDENT, Role.OWNER];
+
 router.post(
   '/conversation',
   checkAuth(Role.STUDENT),
@@ -13,19 +15,37 @@ router.post(
 
 router.get(
   '/conversations',
-  checkAuth(Role.STUDENT, Role.OWNER),
+  checkAuth(...ALL_ROLES),
   ChatController.getMyConversations,
 );
 
 router.get(
   '/messages/:conversationId',
-  checkAuth(Role.STUDENT, Role.OWNER),
+  checkAuth(...ALL_ROLES),
   ChatController.getMessages,
+);
+
+router.post(
+  '/messages',
+  checkAuth(...ALL_ROLES),
+  ChatController.sendMessage,
+);
+
+router.post(
+  '/mark-read/:conversationId',
+  checkAuth(...ALL_ROLES),
+  ChatController.markRead,
+);
+
+router.get(
+  '/realtime-token',
+  checkAuth(...ALL_ROLES),
+  ChatController.getRealtimeToken,
 );
 
 router.get(
   '/unread-count',
-  checkAuth(Role.STUDENT, Role.OWNER),
+  checkAuth(...ALL_ROLES),
   ChatController.getUnreadCount,
 );
 
