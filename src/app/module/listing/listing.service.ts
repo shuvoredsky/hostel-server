@@ -133,37 +133,36 @@ const getAllListings = async (filters: IListingFilterPayload & { studentId?: str
     prisma.listing.count({ where }),
   ]);
 
-  // Average rating + wishlist status calculate করো
-  const listingsWithRating = await Promise.all(
-    listings.map(async (listing) => {
-      const ratings = listing.reviews.map((r) => r.rating);
-      const avgRating =
-        ratings.length > 0
-          ? parseFloat((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
-          : 0;
+  // Average rating + wishlist status calculate করো (N+1 query avoided)
+  let wishlistedListingIds = new Set<string>();
+  if (studentId && listings.length > 0) {
+    const wishlists = await prisma.wishlist.findMany({
+      where: {
+        studentId,
+        listingId: { in: listings.map((l) => l.id) },
+      },
+      select: { listingId: true },
+    });
+    wishlistedListingIds = new Set(wishlists.map((w) => w.listingId));
+  }
 
-      let isWishlisted = false;
-      if (studentId) {
-        const wishlist = await prisma.wishlist.findUnique({
-          where: {
-            studentId_listingId: {
-              studentId,
-              listingId: listing.id,
-            },
-          },
-        });
-        isWishlisted = !!wishlist;
-      }
+  const listingsWithRating = listings.map((listing) => {
+    const ratings = listing.reviews.map((r) => r.rating);
+    const avgRating =
+      ratings.length > 0
+        ? parseFloat((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
+        : 0;
 
-      return {
-        ...listing,
-        avgRating,
-        totalReviews: ratings.length,
-        isWishlisted,
-        reviews: undefined,
-      };
-    }),
-  );
+    const isWishlisted = wishlistedListingIds.has(listing.id);
+
+    return {
+      ...listing,
+      avgRating,
+      totalReviews: ratings.length,
+      isWishlisted,
+      reviews: undefined,
+    };
+  });
 
   return {
     listings: listingsWithRating,
