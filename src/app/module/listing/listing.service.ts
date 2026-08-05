@@ -225,6 +225,8 @@ const getMyListings = async (user: IRequestUser) => {
 const updateListing = async (
   id: string,
   payload: IUpdateListingPayload,
+  newImages: string[],
+  removeImages: string[],
   user: IRequestUser,
 ) => {
   const validPayload = validateUpdateListingPayload(payload);
@@ -241,10 +243,33 @@ const updateListing = async (
     throw new AppError(status.FORBIDDEN, 'You are not authorized to update this listing');
   }
 
-  const updated = await prisma.listing.update({
-    where: { id },
-    data: validPayload,
-    include: { images: true },
+  const updated = await prisma.$transaction(async (tx) => {
+    // 1. Remove requested images
+    if (removeImages.length > 0) {
+      await tx.listingImage.deleteMany({
+        where: {
+          id: { in: removeImages },
+          listingId: id,
+        },
+      });
+    }
+
+    // 2. Add new images
+    if (newImages.length > 0) {
+      await tx.listingImage.createMany({
+        data: newImages.map((url) => ({
+          url,
+          listingId: id,
+        })),
+      });
+    }
+
+    // 3. Update listing fields
+    return await tx.listing.update({
+      where: { id },
+      data: validPayload,
+      include: { images: true },
+    });
   });
 
   return updated;

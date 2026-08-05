@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { catchAsync } from '../../shared/catchAsync';
 import { sendResponse } from '../../shared/sendResponse';
 import { ChatService } from './chat.service';
+import AppError from '../../errorHelpers/AppError';
 
 const getOrCreateConversation = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
@@ -89,7 +90,11 @@ const markRead = catchAsync(async (req: Request, res: Response) => {
 
 const getRealtimeToken = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET || 'supabase-jwt-secret-placeholder-minimum-32-chars';
+  const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
+
+  if (!supabaseJwtSecret) {
+    throw new AppError(status.INTERNAL_SERVER_ERROR, 'SUPABASE_JWT_SECRET is not configured on the server');
+  }
 
   const token = jwt.sign(
     {
@@ -99,7 +104,7 @@ const getRealtimeToken = catchAsync(async (req: Request, res: Response) => {
       iss: 'supabase',
     },
     supabaseJwtSecret,
-    { expiresIn: '1d' }
+    { expiresIn: '1d', algorithm: 'HS256' }
   );
 
   sendResponse(res, {

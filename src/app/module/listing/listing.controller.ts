@@ -149,8 +149,20 @@ const getMyListings = catchAsync(async (req: Request, res: Response) => {
 const updateListing = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const user = (req as any).user;
-  const payload = normalizeListingPayload(req.body) as IUpdateListingPayload;
-  const result = await ListingService.updateListing(id, payload, user);
+  const body = req.body;
+  const newImages = (req.files as Express.Multer.File[])?.map((file) => file.path) || [];
+
+  let removeImages: string[] = [];
+  if (body.removeImages) {
+    try {
+      removeImages = JSON.parse(body.removeImages);
+    } catch {
+      removeImages = body.removeImages.split(',').map((x: string) => x.trim()).filter(Boolean);
+    }
+  }
+
+  const payload = normalizeListingPayload(body) as IUpdateListingPayload;
+  const result = await ListingService.updateListing(id, payload, newImages, removeImages, user);
 
   sendResponse(res, {
     httpStatusCode: status.OK,
