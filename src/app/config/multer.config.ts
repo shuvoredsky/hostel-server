@@ -98,3 +98,71 @@ export const bannerUpload = multer({
   fileFilter: imageFileFilter,
   limits: { fileSize: 5 * 1024 * 1024 },
 });
+
+// Banner Video এর জন্য storage
+const bannerVideoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'dhakastay/site/banners/videos',
+    resource_type: 'video',
+    allowed_formats: ['mp4', 'webm', 'mov'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+  } as any,
+});
+
+const videoFileFilter = (
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback,
+) => {
+  if (file.mimetype.startsWith('video/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only video files (MP4, WebM) are allowed'));
+  }
+};
+
+export const bannerVideoUpload = multer({
+  storage: bannerVideoStorage,
+  fileFilter: videoFileFilter,
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB
+});
+
+// Banner Media Storage (handles both poster image and video in multi-field upload)
+const bannerMediaStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req: any, file: Express.Multer.File) => {
+    if (file.mimetype.startsWith('video/')) {
+      return {
+        folder: 'dhakastay/site/banners/videos',
+        resource_type: 'video',
+        allowed_formats: ['mp4', 'webm', 'mov'],
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      };
+    }
+    return {
+      folder: 'dhakastay/site/banners',
+      resource_type: 'image',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      transformation: [{ width: 1920, height: 600, crop: 'limit' }],
+    };
+  },
+});
+
+const bannerMediaFileFilter = (
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback,
+) => {
+  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image and video files are allowed'));
+  }
+};
+
+export const bannerMediaUpload = multer({
+  storage: bannerMediaStorage,
+  fileFilter: bannerMediaFileFilter,
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB
+});

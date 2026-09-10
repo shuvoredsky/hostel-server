@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { Role } from '../../../generated';
 import { checkAuth } from '../../middleware/checkAuth';
-import { logoUpload, bannerUpload } from '../../config/multer.config';
+import { logoUpload, bannerUpload, bannerMediaUpload } from '../../config/multer.config';
 import { SettingsController } from './settings.controller';
 
 const router = Router();
@@ -22,6 +22,16 @@ router.post(
   checkAuth(Role.ADMIN),
   bannerUpload.single('banner'),
   SettingsController.addBanner,
+);
+
+router.post(
+  '/banner/video',
+  checkAuth(Role.ADMIN),
+  bannerMediaUpload.fields([
+    { name: 'banner', maxCount: 1 },
+    { name: 'video', maxCount: 1 },
+  ]),
+  SettingsController.addVideoBanner,
 );
 
 router.patch(

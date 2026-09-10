@@ -1,6 +1,7 @@
 import AppError from '../../errorHelpers/AppError';
 import { prisma } from '../../lib/prisma';
 import status from 'http-status';
+import { BannerMediaType } from '../../../generated';
 
 // ─── Get Site Settings ────────────────────────────────────────────────────────
 const getSiteSettings = async () => {
@@ -34,12 +35,21 @@ const updateLogo = async (logoUrl: string) => {
 // ─── Add Banner ───────────────────────────────────────────────────────────────
 const addBanner = async (payload: {
   imageUrl: string;
+  videoUrl?: string | null;
+  mediaType?: BannerMediaType;
   title?: string;
   order?: number;
 }) => {
+  const mediaType = payload.mediaType || BannerMediaType.IMAGE;
+  if (mediaType === BannerMediaType.VIDEO && !payload.videoUrl) {
+    throw new AppError(status.BAD_REQUEST, 'Video file or URL is required for video banners');
+  }
+
   const banner = await prisma.siteBanner.create({
     data: {
       imageUrl: payload.imageUrl,
+      videoUrl: mediaType === BannerMediaType.VIDEO ? payload.videoUrl : null,
+      mediaType,
       title: payload.title,
       order: payload.order || 0,
     },
@@ -51,7 +61,14 @@ const addBanner = async (payload: {
 // ─── Update Banner ────────────────────────────────────────────────────────────
 const updateBanner = async (
   bannerId: string,
-  payload: { title?: string; isActive?: boolean; order?: number },
+  payload: {
+    title?: string;
+    isActive?: boolean;
+    order?: number;
+    mediaType?: BannerMediaType;
+    imageUrl?: string;
+    videoUrl?: string | null;
+  },
 ) => {
   const banner = await prisma.siteBanner.findFirst({
     where: { id: bannerId },
@@ -61,9 +78,20 @@ const updateBanner = async (
     throw new AppError(status.NOT_FOUND, 'Banner not found');
   }
 
+  const mediaType = payload.mediaType ?? banner.mediaType;
+  const videoUrl = payload.videoUrl !== undefined ? payload.videoUrl : banner.videoUrl;
+
+  if (mediaType === BannerMediaType.VIDEO && !videoUrl) {
+    throw new AppError(status.BAD_REQUEST, 'Video URL is required for video banners');
+  }
+
   return await prisma.siteBanner.update({
     where: { id: bannerId },
-    data: payload,
+    data: {
+      ...payload,
+      videoUrl: mediaType === BannerMediaType.VIDEO ? videoUrl : null,
+      mediaType,
+    },
   });
 };
 

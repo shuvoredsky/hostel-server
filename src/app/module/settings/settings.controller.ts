@@ -37,7 +37,7 @@ const updateLogo = catchAsync(async (req: Request, res: Response) => {
 });
 
 const addBanner = catchAsync(async (req: Request, res: Response) => {
-  const imageUrl = (req.file as any)?.path;
+  const imageUrl = (req.file as any)?.path || req.body.imageUrl;
 
   if (!imageUrl) {
     return sendResponse(res, {
@@ -47,8 +47,13 @@ const addBanner = catchAsync(async (req: Request, res: Response) => {
     });
   }
 
+  const mediaType = req.body.mediaType || 'IMAGE';
+  const videoUrl = req.body.videoUrl || null;
+
   const result = await SettingsService.addBanner({
     imageUrl,
+    videoUrl,
+    mediaType,
     title: req.body.title,
     order: req.body.order ? Number(req.body.order) : undefined,
   });
@@ -57,6 +62,46 @@ const addBanner = catchAsync(async (req: Request, res: Response) => {
     httpStatusCode: status.CREATED,
     success: true,
     message: 'Banner added successfully',
+    data: result,
+  });
+});
+
+const addVideoBanner = catchAsync(async (req: Request, res: Response) => {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+  const bannerFile = files?.['banner']?.[0];
+  const videoFile = files?.['video']?.[0];
+
+  const imageUrl = bannerFile?.path || (req.file as any)?.path || req.body.imageUrl;
+  const videoUrl = videoFile?.path || req.body.videoUrl;
+
+  if (!imageUrl) {
+    return sendResponse(res, {
+      httpStatusCode: status.BAD_REQUEST,
+      success: false,
+      message: 'Poster/thumbnail image is required for video banner',
+    });
+  }
+
+  if (!videoUrl) {
+    return sendResponse(res, {
+      httpStatusCode: status.BAD_REQUEST,
+      success: false,
+      message: 'Video file is required for video banner',
+    });
+  }
+
+  const result = await SettingsService.addBanner({
+    imageUrl,
+    videoUrl,
+    mediaType: 'VIDEO' as any,
+    title: req.body.title,
+    order: req.body.order ? Number(req.body.order) : undefined,
+  });
+
+  sendResponse(res, {
+    httpStatusCode: status.CREATED,
+    success: true,
+    message: 'Video banner added successfully',
     data: result,
   });
 });
@@ -100,6 +145,7 @@ export const SettingsController = {
   getSiteSettings,
   updateLogo,
   addBanner,
+  addVideoBanner,
   updateBanner,
   deleteBanner,
   reorderBanners,
