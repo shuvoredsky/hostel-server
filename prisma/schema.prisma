@@ -77,6 +77,9 @@ model User {
   sentMessages         Message[]      @relation("SentMessages")
   conversations        Conversation[]
   messages             Message[]
+
+  @@index([role])
+  @@index([status])
 }
 
 model StudentVerification {
@@ -239,6 +242,10 @@ model Listing {
   @@index([area])
   @@index([city])
   @@index([price])
+  @@index([ownerId])
+  @@index([type])
+  @@index([genderPreference])
+  @@index([isAvailable])
 }
 
 model ListingImage {
@@ -281,6 +288,12 @@ model Booking {
   user         User?         @relation(fields: [userId], references: [id])
   userId       String?
   extraCharges ExtraCharge[]
+
+  @@index([studentId])
+  @@index([ownerId])
+  @@index([listingId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Review {
@@ -316,6 +329,9 @@ model PaymentInstallment {
   updatedAt     DateTime          @updatedAt
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+  @@index([status])
 }
 
 enum PaymentStatus {
@@ -345,6 +361,10 @@ model Payment {
 
   booking Booking @relation(fields: [bookingId], references: [id])
   student User    @relation("StudentPayments", fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([status])
+  @@index([paidAt])
 }
 
 model ExtraCharge {
@@ -425,4 +445,7 @@ model Message {
   sender       User         @relation("SentMessages", fields: [senderId], references: [id])
   user         User?        @relation(fields: [userId], references: [id])
   userId       String?
+
+  @@index([conversationId])
+  @@index([isRead])
 }
