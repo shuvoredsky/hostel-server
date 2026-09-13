@@ -10,6 +10,12 @@ const router = Router();
 router.get('/', SettingsController.getSiteSettings);
 
 // Admin only
+router.get(
+  '/admin/banners',
+  checkAuth(Role.ADMIN),
+  SettingsController.getAllBannersForAdmin,
+);
+
 router.patch(
   '/logo',
   checkAuth(Role.ADMIN),

@@ -15,6 +15,17 @@ const getSiteSettings = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllBannersForAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await SettingsService.getAllBannersForAdmin();
+
+  sendResponse(res, {
+    httpStatusCode: status.OK,
+    success: true,
+    message: 'All banners fetched successfully for admin',
+    data: result,
+  });
+});
+
 const updateLogo = catchAsync(async (req: Request, res: Response) => {
   const logoUrl = (req.file as any)?.path;
 
@@ -71,16 +82,7 @@ const addVideoBanner = catchAsync(async (req: Request, res: Response) => {
   const bannerFile = files?.['banner']?.[0];
   const videoFile = files?.['video']?.[0];
 
-  const imageUrl = bannerFile?.path || (req.file as any)?.path || req.body.imageUrl;
   const videoUrl = videoFile?.path || req.body.videoUrl;
-
-  if (!imageUrl) {
-    return sendResponse(res, {
-      httpStatusCode: status.BAD_REQUEST,
-      success: false,
-      message: 'Poster/thumbnail image is required for video banner',
-    });
-  }
 
   if (!videoUrl) {
     return sendResponse(res, {
@@ -89,6 +91,12 @@ const addVideoBanner = catchAsync(async (req: Request, res: Response) => {
       message: 'Video file is required for video banner',
     });
   }
+
+  // If a custom poster was provided, use it; otherwise, use Cloudinary's auto-generated .jpg poster frame from the video
+  const autoPosterUrl = typeof videoUrl === 'string' && videoUrl.includes('cloudinary.com')
+    ? videoUrl.replace(/\.[^/.]+$/, '.jpg')
+    : videoUrl;
+  const imageUrl = bannerFile?.path || (req.file as any)?.path || req.body.imageUrl || autoPosterUrl;
 
   const result = await SettingsService.addBanner({
     imageUrl,
@@ -143,6 +151,7 @@ const reorderBanners = catchAsync(async (req: Request, res: Response) => {
 
 export const SettingsController = {
   getSiteSettings,
+  getAllBannersForAdmin,
   updateLogo,
   addBanner,
   addVideoBanner,

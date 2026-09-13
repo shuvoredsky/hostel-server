@@ -3,7 +3,7 @@ import { prisma } from '../../lib/prisma';
 import status from 'http-status';
 import { BannerMediaType } from '../../../generated';
 
-// ─── Get Site Settings ────────────────────────────────────────────────────────
+// ─── Get Site Settings (Public — Active Banners Only) ─────────────────────────
 const getSiteSettings = async () => {
   const [settings, banners] = await Promise.all([
     prisma.siteSettings.findFirst(),
@@ -14,6 +14,13 @@ const getSiteSettings = async () => {
   ]);
 
   return { settings, banners };
+};
+
+// ─── Get All Banners For Admin (Active + Inactive) ───────────────────────────
+const getAllBannersForAdmin = async () => {
+  return await prisma.siteBanner.findMany({
+    orderBy: { order: 'asc' },
+  });
 };
 
 // ─── Update Logo ──────────────────────────────────────────────────────────────
@@ -126,6 +133,7 @@ const reorderBanners = async (bannerOrders: { id: string; order: number }[]) => 
 
 export const SettingsService = {
   getSiteSettings,
+  getAllBannersForAdmin,
   updateLogo,
   addBanner,
   updateBanner,
